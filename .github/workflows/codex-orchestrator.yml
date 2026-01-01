@@ -69,6 +69,28 @@ jobs:
         run: |
           npm i -g @openai/codex
 
+      - name: Verify OPENAI_API_KEY is non-empty
+        run: |
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "OPENAI_API_KEY is empty or unset"
+            exit 1
+          fi
+          echo "OPENAI_API_KEY is set (length ${#OPENAI_API_KEY})"
+
+      - name: Codex auth smoke test
+        run: |
+          set -euo pipefail
+          node -v
+          codex --version
+          # Prove the env var is present (length only, do NOT print key)
+          python - <<'PY'
+          import os
+          k = os.getenv("OPENAI_API_KEY","")
+          print("OPENAI_API_KEY length:", len(k))
+          PY
+          # Force the variable into the process environment for this command
+          OPENAI_API_KEY="$OPENAI_API_KEY" codex models list >/dev/null || true
+
       - name: Configure git user
         run: |
           git config user.name "codex-orchestrator"
