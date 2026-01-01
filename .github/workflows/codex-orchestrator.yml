@@ -75,7 +75,7 @@ jobs:
           set -euo pipefail
           node -v
           codex --version
-          codex exec --json "respond with the single word OK" >/dev/null
+          codex exec --json "respond with the single word OK"
 
       - name: Configure git user
         run: |
