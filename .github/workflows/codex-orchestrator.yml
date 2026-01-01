@@ -70,22 +70,25 @@ jobs:
         run: |
           npm i -g @openai/codex
 
-      - name: Codex auth smoke test
-        run: |
-          set -euo pipefail
-          node -v
-          codex --version
-          codex exec --json "respond with the single word OK"
-
-      - name: Configure git user
-        run: |
-          git config user.name "codex-orchestrator"
-          git config user.email "codex-orchestrator@users.noreply.github.com"
-
       - name: Precreate logs dir
         run: |
           mkdir -p .orchestrator_logs
           echo '{"result":"workflow_started"}' > .orchestrator_logs/manifest.json
+
+      - name: Codex auth smoke test
+        run: |
+          set -euo pipefail
+          echo "node: $(node -v)" | tee -a .orchestrator_logs/codex_smoke_test.log
+          echo "codex: $(codex --version)" | tee -a .orchestrator_logs/codex_smoke_test.log
+
+          # Run a minimal call. If this fails (quota/auth/etc), the step fails the job.
+          codex exec --json "respond with the single word OK" \
+            2>&1 | tee -a .orchestrator_logs/codex_smoke_test.log    
+                
+      - name: Configure git user
+        run: |
+          git config user.name "codex-orchestrator"
+          git config user.email "codex-orchestrator@users.noreply.github.com"
 
       - name: Run orchestrator
         run: |
