@@ -1,1 +1,29 @@
-# (use Draft v3 taskpack-lint.yml verbatim)
+name: TaskPack Lint
+
+on:
+  pull_request:
+    paths:
+      - "taskpacks/**"
+      - "tools/orchestrator/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: |
+          python -m pip install --upgrade pip
+          pip install PyYAML==6.0.2
+
+      - name: Validate changed taskpacks
+        run: |
+          for d in taskpacks/*; do
+            if [ -d "$d" ] && [ -f "$d/task.yml" ]; then
+              python tools/orchestrator/validate_taskpack.py "$d"
+            fi
+          done
