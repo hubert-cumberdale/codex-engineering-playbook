@@ -83,6 +83,13 @@ jobs:
         run: |
           python tools/orchestrator/orchestrate.py
 
+      - name: Debug logs directory
+        if: always()
+        run: |
+          echo "PWD=$(pwd)"
+          ls -la
+          ls -la .orchestrator_logs || true
+
       - name: Upload orchestrator logs
         if: always()
         uses: actions/upload-artifact@v4
