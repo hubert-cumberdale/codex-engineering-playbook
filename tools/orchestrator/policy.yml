@@ -1,0 +1,13 @@
+max_attempts_per_phase: 2
+max_total_changed_lines: 800
+repeat_error_signature_limit: 2
+
+require_replan_on_reroute: true
+
+modes:
+  safe:
+    allow_network: false
+    allow_cloud_mutations: false
+  privileged:
+    allow_network: true
+    allow_cloud_mutations: true

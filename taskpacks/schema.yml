@@ -1,0 +1,20 @@
+required_files:
+  - task.yml
+  - spec.md
+  - acceptance.yml
+  - risk.md
+  - runbook.md
+
+task_yml_required_keys:
+  - id
+  - title
+  - type
+  - constraints
+  - acceptance
+
+constraints_required_keys:
+  - allow_network
+  - allow_cloud_mutations
+
+acceptance_required_keys:
+  - must
