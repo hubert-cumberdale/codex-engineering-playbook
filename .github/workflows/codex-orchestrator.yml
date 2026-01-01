@@ -96,3 +96,5 @@ jobs:
         with:
           name: codex-orchestrator-logs
           path: .orchestrator_logs/
+          if-no-files-found: warn
+          include-hidden-files: true
