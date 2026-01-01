@@ -74,6 +74,11 @@ jobs:
           git config user.name "codex-orchestrator"
           git config user.email "codex-orchestrator@users.noreply.github.com"
 
+      - name: Precreate logs dir
+        run: |
+          mkdir -p .orchestrator_logs
+          echo '{"result":"workflow_started"}' > .orchestrator_logs/manifest.json
+
       - name: Run orchestrator
         run: |
           python tools/orchestrator/orchestrate.py
