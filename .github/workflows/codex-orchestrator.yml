@@ -1,1 +1,86 @@
-# (use Draft v3 codex-orchestrator.yml verbatim)
+name: Codex Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      taskpack_path:
+        description: "Path to task pack directory (e.g., taskpacks/my-task)"
+        required: true
+        default: "taskpacks/templates"
+      branch_prefix:
+        description: "Branch prefix"
+        required: true
+        default: "codex"
+      max_attempts:
+        description: "Max attempts per phase"
+        required: true
+        default: "2"
+      open_pr_on_failure:
+        description: "Open a PR even if the workflow fails"
+        required: true
+        default: "true"
+      mode:
+        description: "Execution mode (safe|privileged)"
+        required: true
+        default: "safe"
+      max_changed_lines:
+        description: "Circuit breaker: max changed lines allowed"
+        required: true
+        default: "800"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TASKPACK_PATH: ${{ inputs.taskpack_path }}
+      BRANCH_PREFIX: ${{ inputs.branch_prefix }}
+      MAX_ATTEMPTS: ${{ inputs.max_attempts }}
+      OPEN_PR_ON_FAILURE: ${{ inputs.open_pr_on_failure }}
+      MODE: ${{ inputs.mode }}
+      MAX_CHANGED_LINES: ${{ inputs.max_changed_lines }}
+      PR_BASE: "main"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tools/orchestrator/requirements.txt
+
+      - name: Setup Node (for Codex CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Codex CLI
+        run: |
+          npm i -g @openai/codex
+
+      - name: Configure git user
+        run: |
+          git config user.name "codex-orchestrator"
+          git config user.email "codex-orchestrator@users.noreply.github.com"
+
+      - name: Run orchestrator
+        run: |
+          python tools/orchestrator/orchestrate.py
+
+      - name: Upload orchestrator logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-orchestrator-logs
+          path: .orchestrator_logs/
