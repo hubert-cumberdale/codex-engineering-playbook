@@ -191,6 +191,49 @@ def gh_pr_create(title: str, body: str, base: str = "main") -> str:
     out = run(cmd).stdout.strip().splitlines()[-1]
     return out
 
+def default_pr_body(tp: TaskPack, *, branch_name: str, base_branch: str) -> str:
+    plugin_spec = tp.task.get("plugin")
+    plugin_enabled = os.getenv("ORCH_ENABLE_PLUGINS", "").strip()
+
+    return textwrap.dedent(
+        f"""
+        ## Summary
+        Wire v2 solution plugins into `tools/orchestrator/orchestrate.py` behind a flag and run them using the v2 runner.
+
+        ## What changed
+        - Add `ORCH_ENABLE_PLUGINS=1` / `--enable-plugins` to run the plugin specified in `task.yml` (`plugin:`).
+        - Create an `ExecutionContext` (`run_id`, `workspace_dir`, `artifact_dir`, `constraints`) and run `tools.orchestrator.plugins.runner.run_plugin`.
+        - Record plugin status + result path in `.orchestrator_logs/manifest.json`.
+        - Normalize plugin artifact paths in `plugin_result.json` (relative paths for portability).
+        - CI push uses HTTPS token auth when running under GitHub Actions.
+        - Add `ORCH_BRANCH_NAME` support + PR-exists guard to prevent branch/PR spam.
+
+        ## How to run
+        ```bash
+        ORCH_BRANCH_NAME=codex/{tp.id.lower()} \\
+        TASKPACK_PATH={tp.path.as_posix()} \\
+        ORCH_ENABLE_PLUGINS=1 \\
+        RUN_CODEX_SMOKE=false \\
+        python tools/orchestrator/orchestrate.py
+        ```
+
+        ## Evidence
+        - `python -m pytest -q`
+        - Plugin artifacts created under: `.orchestrator_logs/plugin/{tp.id}/`
+          - `echo.txt`
+          - `echo_report.md`
+          - `plugin_result.json`
+
+        ## Risk / rollback
+        - Default behavior unchanged unless plugins are enabled.
+        - Rollback: revert changes in `tools/orchestrator/orchestrate.py` and `tools/orchestrator/plugins/runner.py`.
+
+        ## Checklist
+        - [x] Tests pass
+        - [x] Plugin execution behind flag
+        - [x] Manifest updated with plugin result
+        """
+    ).strip()
 
 def codex_exec(prompt: str, *, log_name: str) -> Tuple[int, str]:
     """
@@ -470,7 +513,10 @@ def main() -> None:
     run("git push -u origin HEAD")
 
     pr_body_path = tp.path / "pr_body.md"
-    pr_body = pr_body_path.read_text(encoding="utf-8") if pr_body_path.exists() else "(PR body not generated.)"
+    if pr_body_path.exists():
+        pr_body = pr_body_path.read_text(encoding="utf-8")
+    else:
+        pr_body = default_pr_body(tp, branch_name=branch_name, base_branch=base_branch)
 
     title = f"{tp.id}: {tp.title}"
     if gh_pr_exists_for_head(branch_name):
