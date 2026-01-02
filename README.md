@@ -29,8 +29,11 @@ This is the authoritative overview of what this system is, why it exists, and wh
 
 - **AGENTS.md** — Agent operating rules  
 - **TEAM_GUIDE.md** — Human developer workflows  
-- **Task Packs:** `/taskpacks`  
-- **Skills:** `/.codex/skills`
+- **Task Packs:** `./taskpacks`  
+- **Orchestrator:** `./tools/orchestrator/orchestrate.py`
+- **Plugins (v2):** `./tools/orchestrator/plugins`
+- **Solutions:** `./solutions`
+
 
 ---
 
@@ -42,3 +45,27 @@ If a question cannot be answered by:
 3. GOVERNANCE.md  
 
 …it is either undefined or out of scope.
+
+---
+
+## Quickstart
+
+Run a taskpack locally:
+
+```bash
+TASKPACK_PATH=taskpacks/TASK-0102-orchestrator-plugin-arch \
+RUN_CODEX_SMOKE=false \
+python tools/orchestrator/orchestrate.py
+```
+
+Enable plugins:
+```bash
+BASE_BRANCH=main \
+ORCH_BRANCH_NAME=codex/task-0102 \
+ORCH_ENABLE_PLUGINS=1 \
+TASKPACK_PATH=taskpacks/TASK-0102-orchestrator-plugin-arch \
+RUN_CODEX_SMOKE=false \
+python tools/orchestrator/orchestrate.py
+```
+
+Artifacts live in `.orchestrator_logs/`
