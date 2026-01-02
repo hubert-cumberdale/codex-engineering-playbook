@@ -17,6 +17,7 @@ Design goals:
 from __future__ import annotations
 from pathlib import Path
 
+import argparse
 import dataclasses
 import json
 import os
@@ -27,6 +28,7 @@ import sys
 import textwrap
 import time
 from typing import List, Optional, Tuple
+from dataclasses import fields, is_dataclass
 
 import yaml
 
@@ -35,6 +37,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 LOG_DIR = ROOT / ".orchestrator_logs"
 LOG_DIR.mkdir(exist_ok=True)
 
+# Ensure repo root is on sys.path so absolute imports like `tools.*` work
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+# v2 plugin thin-slice
+from tools.orchestrator.plugins.runner import run_plugin
+from tools.orchestrator.plugins.interface import ExecutionContext
 
 @dataclasses.dataclass
 class TaskPack:
@@ -83,6 +92,76 @@ def must_env(name: str) -> str:
         raise SystemExit(f"Missing required env var: {name}")
     return v
 
+def parse_args(argv: List[str]) -> argparse.Namespace:
+    p = argparse.ArgumentParser(add_help=True)
+    p.add_argument(
+        "--enable-plugins",
+        action="store_true",
+        help="Run v2 solution plugin specified by taskpack.task.plugin (default: disabled). "
+            "Can also set Orch_ENABLE_PLUGINS=1."
+    )
+    p.add_argument(
+        "--plugins-strict",
+        action="store_true",
+        help="Fail the run if plugin execution errors (default: non-fatal, recorded in manifest). "
+            "Can also set ORCH_PLUGINS_STRICT=1.",
+    )
+    return p.parse_args(argv)
+
+def _env_truthy(name: str) -> bool:
+    v = os.getenv(name, "").strip().lower()
+    return v in ("1", "true", "yes", "y", "on")
+
+def _write_manifest(path: pathlib.Path, data: dict) -> None:
+    path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+
+def _make_execution_context(tp: TaskPack, *, artifact_dir: pathlib.Path, branch: str, base_branch: str) -> ExecutionContext:
+    """
+    Build ExecutionContext in a forwards-compatible way.
+    We introspect ExecutionContext dataclass fields and pass what exists.
+    """
+    constraints = dict(tp.task.get("constraints", {}) or {})
+    candidate_values = {
+        # common fields / likely needs
+        "repo_root": str(ROOT),
+        "root": str(ROOT),
+        "taskpack_path": str(tp.path),
+        "taskpack_dir": str(tp.path),
+        "artifact_dir": str(artifact_dir),
+        "constraints": constraints,
+        "branch": branch,
+        "branch_name": branch,
+        "base_branch": base_branch,
+        "log_dir": str(LOG_DIR),
+        "env": dict(os.environ),
+    }
+
+    if not is_dataclass(ExecutionContext):
+        # If it stops being a dataclass, fall back
+        return ExecutionContext( #type: ignore[call-arg]
+            artifact_dir=str(artifact_dir),
+            constraints=constraints
+        )
+
+    flds = {f.name: f for f in fields(ExecutionContext)}
+    kwargs = {}
+    missing_required = []
+    for name, f in flds.items():
+        if name in candidate_values:
+            kwargs[name] = candidate_values[name]
+        else:
+            # required if no default and no default_factory
+            if f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING: # type: ignore[attr-defined]
+                missing_required.append(name)
+
+    if missing_required:
+        raise RuntimeError(
+            "ExecutionContext has required fields not provided by orchestrate.py: "
+            + ", ".join(missing_required)
+            + ". Update _make_execution_context() to supply them."
+        )
+
+    return ExecutionContext(**kwargs) # type: ignore[arg-type]
 
 def load_taskpack(tp_path: pathlib.Path) -> TaskPack:
     task_yml = tp_path / "task.yml"
@@ -279,9 +358,21 @@ def main() -> None:
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
+    args = parse_args(sys.argv[1:])
+    enable_plugins = args.enable_plugins or _env_truthy("ORCH_ENABLE_PLUGINS")
+    plugins_strict = args.plugins_strict or _env_truthy("ORCH_PLUGINS_STRICT")
+
     manifest_path = LOG_DIR / "manifest.json"
     if not manifest_path.exists():
         manifest_path.write_text('{"result":"started"}\n', encoding="utf-8")
+
+    manifest = {"result": "started"}
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            manifest = {"result": "started", "warning": "manifest_unreadable"}
+    _write_manifest(manifest_path, manifest)
 
     taskpack_path = pathlib.Path(must_env("TASKPACK_PATH")).resolve()
     if not taskpack_path.exists():
@@ -296,6 +387,33 @@ def main() -> None:
     branch_name = f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
     run(f"git checkout -b {shlex.quote(branch_name)}")
     run_codex = os.getenv("RUN_CODEX_SMOKE", "false").lower() == "true"
+
+    manifest["plugins_enabled"] = bool(enable_plugins)
+    manifest["plugin"] = {"spec": tp.task.get("plugin"), "status": "SKIPPED"}
+    _write_manifest(manifest_path, manifest)
+
+    # --- v2 plugin integration (thin slice) ---
+    # Run plugin if RUN_CODEX_SMOKE=false so we can validate wiring in CI.
+    if enable_plugins:
+        artifact_dir = LOG_DIR / "plugin" / tp.id
+        plugin_errors: List[dict] = []
+        try:
+            ctx = _make_execution_context(tp, artifact_dir=artifact_dir, branch=branch_name, base_branch= base_branch)
+            plugin_result = run_plugin(tp.task, ctx)
+            manifest["plugin"] = {
+                "spec": tp.task.get("plugin"),
+                "status": plugin_result.get("status", "UNKNOWN"),
+                "result_path": str(pathlib.Path(ctx.artifact_dir) / "plugin_result.json"),
+                "id": plugin_result.get("plugin", {}).get("id"),
+                "version": plugin_result.get("plugin", {}).get("version"),
+            }
+        except Exception as e:
+            plugin_errors.append({"error": str(e)})
+            manifest["plugin"] = {"spec": tp.task.get("plugin"), "status": "ERROR", "errors": plugin_errors}
+            _write_manifest(manifest_path, manifest)
+            if plugins_strict:
+                raise
+        _write_manifest(manifest_path, manifest)
 
     phases = ["planner", "implementer", "verifier", "security", "pr_author"]
 
@@ -337,6 +455,8 @@ def main() -> None:
     title = f"{tp.id}: {tp.title}"
     gh_pr_create(title=title, body=pr_body, base=base_branch)
 
+    manifest["result"] = "success"
+    _write_manifest(manifest_path, manifest)
     print(f"Done. Opened PR for branch: {branch_name}")
 
 
