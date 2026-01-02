@@ -81,9 +81,13 @@ def run(cmd: str, *, cwd: pathlib.Path = ROOT, check: bool = True) -> subprocess
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        check=check,
+        check=False,
     )
-
+    if check and proc.returncode != 0:
+        # Print captured output so failures are actionable
+        print(proc.stdout or "")
+        raise subprocess.CalledProcessError(proc.returncode, cmd, output=proc.stdout)
+    return proc
 
 def must_env(name: str) -> str:
     v = os.getenv(name)
