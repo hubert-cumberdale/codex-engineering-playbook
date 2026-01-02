@@ -1,3 +1,5 @@
+deps:
+  - pytest
 tests:
   commands:
     - "python -m pytest -q"

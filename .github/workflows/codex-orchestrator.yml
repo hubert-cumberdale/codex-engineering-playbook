@@ -27,6 +27,10 @@ on:
         description: "Circuit breaker: max changed lines allowed"
         required: true
         default: "800"
+      run_codex_smoke:
+        description: "Run Codex auth smoke test (costs money)"
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -76,6 +80,7 @@ jobs:
           echo '{"result":"workflow_started"}' > .orchestrator_logs/manifest.json
 
       - name: Codex auth smoke test
+        if: ${{ inputs.run_codex_smoke == 'true' }}
         run: |
           set -euo pipefail
           echo "node: $(node -v)" | tee -a .orchestrator_logs/codex_smoke_test.log
@@ -84,7 +89,7 @@ jobs:
           # Run a minimal call. If this fails (quota/auth/etc), the step fails the job.
           codex exec --json "respond with the single word OK" \
             2>&1 | tee -a .orchestrator_logs/codex_smoke_test.log    
-                
+
       - name: Configure git user
         run: |
           git config user.name "codex-orchestrator"
@@ -93,13 +98,6 @@ jobs:
       - name: Run orchestrator
         run: |
           python tools/orchestrator/orchestrate.py
-
-      - name: Debug logs directory
-        if: always()
-        run: |
-          echo "PWD=$(pwd)"
-          ls -la
-          ls -la .orchestrator_logs || true
 
       - name: Upload orchestrator logs
         if: always()

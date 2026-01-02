@@ -237,41 +237,42 @@ def phase_prompt(tp: TaskPack, phase: str) -> str:
 def run_acceptance(tp: TaskPack) -> None:
     # Ground-truth execution outside Codex.
     acc = tp.acceptance or {}
-    deps = acc.get("deps", [])
+    deps = acc.get("deps", []) or []
+    
     if deps:
-        run(f"python -m pip install {' '.join(deps)}", check=True)
-    sections = [("format", acc.get("format", {})), ("lint", acc.get("lint", {})), ("tests", acc.get("tests", {}))]
+        run("python -m pip install --upgrade pip", check=True)
+        run(
+            "python -m pip install --disable-pip-version-check "
+            + " ".join(map(shlex.quote, deps)),
+            check=True,
+        )
+
+    sections = [
+        ("format", acc.get("format", {})),
+        ("lint", acc.get("lint", {})),
+        ("tests", acc.get("tests", {})),
+    ]    
+        
     for name, section in sections:
         cmds = section.get("commands", []) if isinstance(section, dict) else []
         for i, cmd in enumerate(cmds):
             log = LOG_DIR / f"acceptance_{name}_{i}.log"
             try:
                 out = run(cmd, check=True)
-                log.write_text((out.stdout or "") + (out.stderr or ""), encoding="utf-8")
+                log.write_text(out.stdout or "", encoding="utf-8")
             except subprocess.CalledProcessError as e:
-                log.write_text((e.stdout or "") + (e.stderr or ""), encoding="utf-8")
+                log.write_text(e.stdout or "", encoding="utf-8")
                 raise
 
 
 def main() -> None:
 
-    # Ensure logs dir exists immediately so the workflow can always upload artifacts
-    log_dir = Path(".orchestrator_logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Always write a minimal manifest early
-    manifest_path = log_dir / "manifest.json"
+    manifest_path = LOG_DIR / "manifest.json"
     if not manifest_path.exists():
         manifest_path.write_text('{"result":"started"}\n', encoding="utf-8")
 
-    # Ensure logs dir exists immediately so the workflow can always upload artifacts
-    log_dir = Path(".orchestrator_logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
-
-    # Always write a minimal manifest early
-    manifest_path = log_dir / "manifest.json"
-    if not manifest_path.exists():
-        manifest_path.write_text('{"result":"started"}\n', encoding="utf-8")
     taskpack_path = pathlib.Path(must_env("TASKPACK_PATH")).resolve()
     if not taskpack_path.exists():
         raise SystemExit(f"TASKPACK_PATH does not exist: {taskpack_path}")

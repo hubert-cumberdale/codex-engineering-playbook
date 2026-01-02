@@ -9,13 +9,8 @@ constraints:
   allow_cloud_mutations: false
 
 acceptance:
-  deps:
-    - pytest
   must:
     - "All pytest tests pass"
-  tests:
-    commands:
-      - "python -m pytest -q"
 
 skills:
   prefer:
