@@ -437,7 +437,8 @@ def main() -> None:
 
     tp = load_taskpack(taskpack_path)
 
-    base_branch = git_current_branch()
+    starting_branch = git_current_branch()
+    base_branch = os.getenv("BASE_BRANCH") or starting_branch
 
     explicit_branch = os.getenv("ORCH_BRANCH_NAME")
     branch_name = explicit_branch or f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
