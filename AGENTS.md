@@ -8,6 +8,7 @@ that pass CI and are safe to merge. Prefer small, verifiable commits.
 - Do not exfiltrate secrets.
 - Do not add plaintext credentials or tokens.
 - Stop and report if a secret is detected.
+- Agents must respect VERSIONING.md and GOVERNANCE.md.
 
 ## How to work
 1) Read the Task Pack.
