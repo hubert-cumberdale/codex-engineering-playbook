@@ -49,6 +49,7 @@ jobs:
       MODE: ${{ inputs.mode }}
       MAX_CHANGED_LINES: ${{ inputs.max_changed_lines }}
       PR_BASE: "main"
+      RUN_CODEX_SMOKE: ${{ inputs.run_codex_smoke }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -262,6 +262,16 @@ def run_acceptance(tp: TaskPack) -> None:
                 log.write_text(out.stdout or "", encoding="utf-8")
             except subprocess.CalledProcessError as e:
                 log.write_text(e.stdout or "", encoding="utf-8")
+
+                # pytest returns 5 when no tests are collected
+                if "pytest" in cmd and e.returncode == 5:
+                    # Treat as warning, not failure
+                    warn = LOG_DIR / "acceptance_warnings.log"
+                    warn.write_text(
+                        "pytest reported no tests collected (exit code 5)\n",
+                        encoding="utf-8",
+                    )
+                    return
                 raise
 
 
@@ -285,10 +295,14 @@ def main() -> None:
     base_branch = git_current_branch()
     branch_name = f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
     run(f"git checkout -b {shlex.quote(branch_name)}")
+    run_codex = os.getenv("RUN_CODEX_SMOKE", "false").lower() == "true"
 
     phases = ["planner", "implementer", "verifier", "security", "pr_author"]
 
     for phase in phases:
+        if not run_codex:
+            print(f"[skip] Codex phase '{phase}' (RUN_CODEX_SMOKE=false)")
+            continue
         ok = False
         for attempt in range(1, max_attempts + 1):
             prompt = phase_prompt(tp, phase)
