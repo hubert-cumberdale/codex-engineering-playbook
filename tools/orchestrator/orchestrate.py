@@ -188,7 +188,7 @@ def gh_pr_create(title: str, body: str, base: str = "main") -> str:
     body_file = LOG_DIR / "pr_body.md"
     body_file.write_text(body, encoding="utf-8")
     cmd = f"gh pr create --base {shlex.quote(base)} --title {shlex.quote(title)} --body-file {shlex.quote(str(body_file))}"
-    out = run(cmd).stdout.strip()
+    out = run(cmd).stdout.strip().splitlines()[-1]
     return out
 
 
@@ -350,6 +350,21 @@ def ensure_https_remote_for_ci() -> None:
             return
         run(f"git remote set-url origin https://x-access-token:{token}@github.com/{repo}.git", check=True)
 
+def gh_pr_exists_for_head(branch: str) -> bool:
+    proc = run(
+        f"gh pr list --head {shlex.quote(branch)} --json number -q 'length'",
+        check=False,
+    )
+    return proc.returncode == 0 and (proc.stdout or "").strip() not in ("", "0")
+
+def git_checkout_branch(branch: str) -> None:
+    # Create branch if it doesn't exist; otherwise just checkout
+    proc = run(f"git rev-parse --verify {shlex.quote(branch)}", check=False)
+    if proc.returncode == 0:
+        run(f"git checkout {shlex.quote(branch)}")
+    else:
+        run(f"git checkout -b {shlex.quote(branch)}")
+
 def main() -> None:
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -380,12 +395,12 @@ def main() -> None:
     tp = load_taskpack(taskpack_path)
 
     base_branch = git_current_branch()
+
     explicit_branch = os.getenv("ORCH_BRANCH_NAME")
-    if explicit_branch:
-        branch_name = explicit_branch
-    else:
-        branch_name = f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"    
-        run(f"git checkout -b {shlex.quote(branch_name)}")
+    branch_name = explicit_branch or f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
+
+    git_checkout_branch(branch_name)
+
     run_codex = os.getenv("RUN_CODEX_SMOKE", "false").lower() == "true"
 
     plugin_spec = tp.task.get("plugin")
@@ -458,12 +473,15 @@ def main() -> None:
     pr_body = pr_body_path.read_text(encoding="utf-8") if pr_body_path.exists() else "(PR body not generated.)"
 
     title = f"{tp.id}: {tp.title}"
-    pr_out = gh_pr_create(title=title, body=pr_body, base=base_branch)
-    print(f"PR: {pr_out}")
+    if gh_pr_exists_for_head(branch_name):
+        print("PR already exists for this branch; skipping creation.")
+    else:
+        pr_out = gh_pr_create(title=title, body=pr_body, base=base_branch)
+        print(f"PR: {pr_out}")
 
     manifest["result"] = "success"
     _write_manifest(manifest_path, manifest)
-    print(f"Done. Opened PR for branch: {branch_name}")
+    print(f"Done. Branch: {branch_name}")
 
 
 if __name__ == "__main__":
