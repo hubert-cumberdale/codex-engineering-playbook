@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tools/orchestrator/requirements.txt
+          pip install pytest
+
+      - name: Pytest
+        run: pytest -q
+
+      - name: Plugin smoke (echo)
+        run: |
+          python -c "import tempfile, os
+from tools.orchestrator.plugins.runner import run_plugin
+from tools.orchestrator.plugins.interface import ExecutionContext
+taskpack={'plugin':'solutions.security.echo.plugin:EchoPlugin','constraints':{'allow_network':False,'allow_cloud_mutations':False}}
+with tempfile.TemporaryDirectory() as d:
+  art=os.path.join(d,'.orchestrator_logs'); os.makedirs(art, exist_ok=True)
+  ctx=ExecutionContext(run_id='ci', taskpack_path=d, workspace_dir=d, constraints=taskpack['constraints'], artifact_dir=art, log=print)
+  run_plugin(taskpack, ctx)
+  assert os.path.exists(os.path.join(art,'plugin_result.json'))
+  assert os.path.exists(os.path.join(art,'echo.txt'))
+  assert os.path.exists(os.path.join(art,'echo_report.md'))
+print('ok')"
