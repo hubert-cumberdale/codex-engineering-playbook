@@ -237,16 +237,19 @@ def phase_prompt(tp: TaskPack, phase: str) -> str:
 def run_acceptance(tp: TaskPack) -> None:
     # Ground-truth execution outside Codex.
     acc = tp.acceptance or {}
+    deps = acc.get("deps", [])
+    if deps:
+        run(f"python -m pip install {' '.join(deps)}", check=True)
     sections = [("format", acc.get("format", {})), ("lint", acc.get("lint", {})), ("tests", acc.get("tests", {}))]
     for name, section in sections:
         cmds = section.get("commands", []) if isinstance(section, dict) else []
         for i, cmd in enumerate(cmds):
             log = LOG_DIR / f"acceptance_{name}_{i}.log"
             try:
-                out = run(cmd, check=True).stdout
-                log.write_text(out, encoding="utf-8")
+                out = run(cmd, check=True)
+                log.write_text((out.stdout or "") + (out.stderr or ""), encoding="utf-8")
             except subprocess.CalledProcessError as e:
-                (LOG_DIR / f"acceptance_{name}_{i}.log").write_text(e.stdout or "", encoding="utf-8")
+                log.write_text((e.stdout or "") + (e.stderr or ""), encoding="utf-8")
                 raise
 
 
