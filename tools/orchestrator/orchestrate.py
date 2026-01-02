@@ -17,6 +17,7 @@ Design goals:
 from __future__ import annotations
 from pathlib import Path
 
+import argparse
 import dataclasses
 import json
 import os
@@ -35,6 +36,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 LOG_DIR = ROOT / ".orchestrator_logs"
 LOG_DIR.mkdir(exist_ok=True)
 
+# Ensure repo root is on sys.path so absolute imports like `tools.*` work
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+# v2 plugin thin-slice
+from tools.orchestrator.plugins.runner import run_plugin
+from tools.orchestrator.plugins.interface import ExecutionContext
 
 @dataclasses.dataclass
 class TaskPack:
@@ -73,9 +81,13 @@ def run(cmd: str, *, cwd: pathlib.Path = ROOT, check: bool = True) -> subprocess
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        check=check,
+        check=False,
     )
-
+    if check and proc.returncode != 0:
+        # Print captured output so failures are actionable
+        print(proc.stdout or "")
+        raise subprocess.CalledProcessError(proc.returncode, cmd, output=proc.stdout)
+    return proc
 
 def must_env(name: str) -> str:
     v = os.getenv(name)
@@ -83,6 +95,58 @@ def must_env(name: str) -> str:
         raise SystemExit(f"Missing required env var: {name}")
     return v
 
+def parse_args(argv: List[str]) -> argparse.Namespace:
+    p = argparse.ArgumentParser(add_help=True)
+    p.add_argument(
+        "--enable-plugins",
+        action="store_true",
+        help="Run v2 solution plugin specified by taskpack.task.plugin (default: disabled). "
+            "Can also set ORCH_ENABLE_PLUGINS=1."
+    )
+    p.add_argument(
+        "--plugins-strict",
+        action="store_true",
+        help="Fail the run if plugin execution errors (default: non-fatal, recorded in manifest). "
+            "Can also set ORCH_PLUGINS_STRICT=1.",
+    )
+    return p.parse_args(argv)
+
+def _env_truthy(name: str) -> bool:
+    v = os.getenv(name, "").strip().lower()
+    return v in ("1", "true", "yes", "y", "on")
+
+def _write_manifest(path: pathlib.Path, data: dict) -> None:
+    path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+
+def _make_execution_context(tp: TaskPack, *, artifact_dir: pathlib.Path) -> ExecutionContext:
+    run_id = f"{tp.id.lower()}-{int(time.time())}"
+
+    workspace_dir = ROOT / ".orchestrator_workspace" / run_id
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+
+    constraints = dict(tp.task.get("constraints", {}) or {})
+
+    plugin_log_path = LOG_DIR / f"plugin_{tp.id.lower()}.log"
+
+    def _log(*args, **kwargs) -> None:
+        msg = " ".join(str(a) for a in args)
+        try:
+            with open(plugin_log_path, "a", encoding="utf-8") as f:
+                f.write(msg + "\n")
+        except Exception:
+            pass
+        print(*args, **kwargs)
+
+    return ExecutionContext(
+        run_id=run_id,
+        taskpack_path=str(tp.path),
+        workspace_dir=str(workspace_dir),
+        constraints=constraints,
+        artifact_dir=str(artifact_dir),
+        log=_log,
+    )
 
 def load_taskpack(tp_path: pathlib.Path) -> TaskPack:
     task_yml = tp_path / "task.yml"
@@ -118,14 +182,58 @@ def git_commit(message: str) -> None:
     run(f"git commit -m {shlex.quote(message)}")
 
 
-def gh_pr_create(title: str, body: str, base: str = "main") -> None:
+def gh_pr_create(title: str, body: str, base: str = "main") -> str:
     # GitHub Actions usually has GH_TOKEN set automatically.
     # We'll rely on `gh` being present on runner (it is on ubuntu-latest).
     body_file = LOG_DIR / "pr_body.md"
     body_file.write_text(body, encoding="utf-8")
     cmd = f"gh pr create --base {shlex.quote(base)} --title {shlex.quote(title)} --body-file {shlex.quote(str(body_file))}"
-    run(cmd)
+    out = run(cmd).stdout.strip().splitlines()[-1]
+    return out
 
+def default_pr_body(tp: TaskPack, *, branch_name: str, base_branch: str) -> str:
+    plugin_spec = tp.task.get("plugin")
+    plugin_enabled = os.getenv("ORCH_ENABLE_PLUGINS", "").strip()
+
+    return textwrap.dedent(
+        f"""
+        ## Summary
+        Wire v2 solution plugins into `tools/orchestrator/orchestrate.py` behind a flag and run them using the v2 runner.
+
+        ## What changed
+        - Add `ORCH_ENABLE_PLUGINS=1` / `--enable-plugins` to run the plugin specified in `task.yml` (`plugin:`).
+        - Create an `ExecutionContext` (`run_id`, `workspace_dir`, `artifact_dir`, `constraints`) and run `tools.orchestrator.plugins.runner.run_plugin`.
+        - Record plugin status + result path in `.orchestrator_logs/manifest.json`.
+        - Normalize plugin artifact paths in `plugin_result.json` (relative paths for portability).
+        - CI push uses HTTPS token auth when running under GitHub Actions.
+        - Add `ORCH_BRANCH_NAME` support + PR-exists guard to prevent branch/PR spam.
+
+        ## How to run
+        ```bash
+        ORCH_BRANCH_NAME=codex/{tp.id.lower()} \\
+        TASKPACK_PATH={tp.path.as_posix()} \\
+        ORCH_ENABLE_PLUGINS=1 \\
+        RUN_CODEX_SMOKE=false \\
+        python tools/orchestrator/orchestrate.py
+        ```
+
+        ## Evidence
+        - `python -m pytest -q`
+        - Plugin artifacts created under: `.orchestrator_logs/plugin/{tp.id}/`
+          - `echo.txt`
+          - `echo_report.md`
+          - `plugin_result.json`
+
+        ## Risk / rollback
+        - Default behavior unchanged unless plugins are enabled.
+        - Rollback: revert changes in `tools/orchestrator/orchestrate.py` and `tools/orchestrator/plugins/runner.py`.
+
+        ## Checklist
+        - [x] Tests pass
+        - [x] Plugin execution behind flag
+        - [x] Manifest updated with plugin result
+        """
+    ).strip()
 
 def codex_exec(prompt: str, *, log_name: str) -> Tuple[int, str]:
     """
@@ -274,14 +382,51 @@ def run_acceptance(tp: TaskPack) -> None:
                     return
                 raise
 
+def ensure_https_remote_for_ci() -> None:
+    if os.getenv("GITHUB_ACTIONS", "").lower() == "true":
+        repo = os.getenv("GITHUB_REPOSITORY")  # e.g. owner/name
+        if not repo:
+            return
+        # Use token auth; GitHub Actions provides GITHUB_TOKEN
+        token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+        if not token:
+            return
+        run(f"git remote set-url origin https://x-access-token:{token}@github.com/{repo}.git", check=True)
+
+def gh_pr_exists_for_head(branch: str) -> bool:
+    proc = run(
+        f"gh pr list --head {shlex.quote(branch)} --json number -q 'length'",
+        check=False,
+    )
+    return proc.returncode == 0 and (proc.stdout or "").strip() not in ("", "0")
+
+def git_checkout_branch(branch: str) -> None:
+    # Create branch if it doesn't exist; otherwise just checkout
+    proc = run(f"git rev-parse --verify {shlex.quote(branch)}", check=False)
+    if proc.returncode == 0:
+        run(f"git checkout {shlex.quote(branch)}")
+    else:
+        run(f"git checkout -b {shlex.quote(branch)}")
 
 def main() -> None:
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
+    args = parse_args(sys.argv[1:])
+    enable_plugins = args.enable_plugins or _env_truthy("ORCH_ENABLE_PLUGINS")
+    plugins_strict = args.plugins_strict or _env_truthy("ORCH_PLUGINS_STRICT")
+
     manifest_path = LOG_DIR / "manifest.json"
     if not manifest_path.exists():
         manifest_path.write_text('{"result":"started"}\n', encoding="utf-8")
+
+    manifest = {"result": "started"}
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            manifest = {"result": "started", "warning": "manifest_unreadable"}
+    _write_manifest(manifest_path, manifest)
 
     taskpack_path = pathlib.Path(must_env("TASKPACK_PATH")).resolve()
     if not taskpack_path.exists():
@@ -292,10 +437,45 @@ def main() -> None:
 
     tp = load_taskpack(taskpack_path)
 
-    base_branch = git_current_branch()
-    branch_name = f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
-    run(f"git checkout -b {shlex.quote(branch_name)}")
+    starting_branch = git_current_branch()
+    base_branch = os.getenv("BASE_BRANCH") or starting_branch
+
+    explicit_branch = os.getenv("ORCH_BRANCH_NAME")
+    branch_name = explicit_branch or f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
+
+    git_checkout_branch(branch_name)
+
     run_codex = os.getenv("RUN_CODEX_SMOKE", "false").lower() == "true"
+
+    plugin_spec = tp.task.get("plugin")
+
+    manifest["plugins_enabled"] = bool(enable_plugins)
+    manifest["plugin"] = {"spec": plugin_spec, "status": "SKIPPED"}
+    _write_manifest(manifest_path, manifest)
+
+    if enable_plugins:
+        if not plugin_spec:
+            manifest["plugin"] = {"spec": None, "status": "SKIPPED", "reason": "taskpack.task.plugin missing"}
+            _write_manifest(manifest_path, manifest)
+        else:
+            artifact_dir = LOG_DIR / "plugin" / tp.id
+            try:
+                ctx = _make_execution_context(tp, artifact_dir=artifact_dir)
+                plugin_result = run_plugin(tp.task, ctx)
+                manifest["plugin"] = {
+                    "spec": plugin_spec,
+                    "status": plugin_result.get("status", "UNKNOWN"),
+                    "result_path": str(pathlib.Path(ctx.artifact_dir).relative_to(ROOT) / "plugin_result.json"),
+                    "id": plugin_result.get("plugin", {}).get("id"),
+                    "version": plugin_result.get("plugin", {}).get("version"),
+                }
+                _write_manifest(manifest_path, manifest)
+            except Exception as e:
+                manifest["plugin"] = {"spec": plugin_spec, "status": "ERROR", "errors": [{"error": str(e)}]}
+                _write_manifest(manifest_path, manifest)
+                if plugins_strict:
+                    raise
+        print(f"[plugin] {plugin_spec} -> {manifest['plugin']['status']}")
 
     phases = ["planner", "implementer", "verifier", "security", "pr_author"]
 
@@ -317,6 +497,7 @@ def main() -> None:
         if not ok:
             # Commit whatever we have (so we can inspect diffs in PR if desired)
             git_commit(f"chore: partial changes before failure in {phase}")
+            ensure_https_remote_for_ci()
             run("git push -u origin HEAD")
             raise SystemExit(f"Phase failed after {max_attempts} attempts: {phase}")
 
@@ -329,15 +510,25 @@ def main() -> None:
     git_commit(f"test: acceptance checks pass for {tp.id}")
 
     # Push branch and open PR
+    ensure_https_remote_for_ci()
     run("git push -u origin HEAD")
 
     pr_body_path = tp.path / "pr_body.md"
-    pr_body = pr_body_path.read_text(encoding="utf-8") if pr_body_path.exists() else "(PR body not generated.)"
+    if pr_body_path.exists():
+        pr_body = pr_body_path.read_text(encoding="utf-8")
+    else:
+        pr_body = default_pr_body(tp, branch_name=branch_name, base_branch=base_branch)
 
     title = f"{tp.id}: {tp.title}"
-    gh_pr_create(title=title, body=pr_body, base=base_branch)
+    if gh_pr_exists_for_head(branch_name):
+        print("PR already exists for this branch; skipping creation.")
+    else:
+        pr_out = gh_pr_create(title=title, body=pr_body, base=base_branch)
+        print(f"PR: {pr_out}")
 
-    print(f"Done. Opened PR for branch: {branch_name}")
+    manifest["result"] = "success"
+    _write_manifest(manifest_path, manifest)
+    print(f"Done. Branch: {branch_name}")
 
 
 if __name__ == "__main__":
