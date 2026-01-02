@@ -115,53 +115,35 @@ def _env_truthy(name: str) -> bool:
 def _write_manifest(path: pathlib.Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
-def _make_execution_context(tp: TaskPack, *, artifact_dir: pathlib.Path, branch: str, base_branch: str) -> ExecutionContext:
-    """
-    Build ExecutionContext in a forwards-compatible way.
-    We introspect ExecutionContext dataclass fields and pass what exists.
-    """
+def _make_execution_context(tp: TaskPack, *, artifact_dir: pathlib.Path) -> ExecutionContext:
+    run_id = f"{tp.id.lower()}-{int(time.time())}"
+
+    workspace_dir = ROOT / ".orchestrator_workspace" / run_id
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+
     constraints = dict(tp.task.get("constraints", {}) or {})
-    candidate_values = {
-        # common fields / likely needs
-        "repo_root": str(ROOT),
-        "root": str(ROOT),
-        "taskpack_path": str(tp.path),
-        "taskpack_dir": str(tp.path),
-        "artifact_dir": str(artifact_dir),
-        "constraints": constraints,
-        "branch": branch,
-        "branch_name": branch,
-        "base_branch": base_branch,
-        "log_dir": str(LOG_DIR),
-        "env": dict(os.environ),
-    }
 
-    if not is_dataclass(ExecutionContext):
-        # If it stops being a dataclass, fall back
-        return ExecutionContext( #type: ignore[call-arg]
-            artifact_dir=str(artifact_dir),
-            constraints=constraints
-        )
+    plugin_log_path = LOG_DIR / f"plugin_{tp.id.lower()}.log"
 
-    flds = {f.name: f for f in fields(ExecutionContext)}
-    kwargs = {}
-    missing_required = []
-    for name, f in flds.items():
-        if name in candidate_values:
-            kwargs[name] = candidate_values[name]
-        else:
-            # required if no default and no default_factory
-            if f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING: # type: ignore[attr-defined]
-                missing_required.append(name)
+    def _log(*args, **kwargs) -> None:
+        msg = " ".join(str(a) for a in args)
+        try:
+            with open(plugin_log_path, "a", encoding="utf-8") as f:
+                f.write(msg + "\n")
+        except Exception:
+            pass
+        print(*args, **kwargs)
 
-    if missing_required:
-        raise RuntimeError(
-            "ExecutionContext has required fields not provided by orchestrate.py: "
-            + ", ".join(missing_required)
-            + ". Update _make_execution_context() to supply them."
-        )
-
-    return ExecutionContext(**kwargs) # type: ignore[arg-type]
+    return ExecutionContext(
+        run_id=run_id,
+        taskpack_path=str(tp.path),
+        workspace_dir=str(workspace_dir),
+        constraints=constraints,
+        artifact_dir=str(artifact_dir),
+        log=_log,
+    )
 
 def load_taskpack(tp_path: pathlib.Path) -> TaskPack:
     task_yml = tp_path / "task.yml"
@@ -388,32 +370,34 @@ def main() -> None:
     run(f"git checkout -b {shlex.quote(branch_name)}")
     run_codex = os.getenv("RUN_CODEX_SMOKE", "false").lower() == "true"
 
+    plugin_spec = tp.task.get("plugin")
+
     manifest["plugins_enabled"] = bool(enable_plugins)
-    manifest["plugin"] = {"spec": tp.task.get("plugin"), "status": "SKIPPED"}
+    manifest["plugin"] = {"spec": plugin_spec, "status": "SKIPPED"}
     _write_manifest(manifest_path, manifest)
 
-    # --- v2 plugin integration (thin slice) ---
-    # Run plugin if RUN_CODEX_SMOKE=false so we can validate wiring in CI.
     if enable_plugins:
-        artifact_dir = LOG_DIR / "plugin" / tp.id
-        plugin_errors: List[dict] = []
-        try:
-            ctx = _make_execution_context(tp, artifact_dir=artifact_dir, branch=branch_name, base_branch= base_branch)
-            plugin_result = run_plugin(tp.task, ctx)
-            manifest["plugin"] = {
-                "spec": tp.task.get("plugin"),
-                "status": plugin_result.get("status", "UNKNOWN"),
-                "result_path": str(pathlib.Path(ctx.artifact_dir) / "plugin_result.json"),
-                "id": plugin_result.get("plugin", {}).get("id"),
-                "version": plugin_result.get("plugin", {}).get("version"),
-            }
-        except Exception as e:
-            plugin_errors.append({"error": str(e)})
-            manifest["plugin"] = {"spec": tp.task.get("plugin"), "status": "ERROR", "errors": plugin_errors}
+        if not plugin_spec:
+            manifest["plugin"] = {"spec": None, "status": "SKIPPED", "reason": "taskpack.task.plugin missing"}
             _write_manifest(manifest_path, manifest)
-            if plugins_strict:
-                raise
-        _write_manifest(manifest_path, manifest)
+        else:
+            artifact_dir = LOG_DIR / "plugin" / tp.id
+            try:
+                ctx = _make_execution_context(tp, artifact_dir=artifact_dir)
+                plugin_result = run_plugin(tp.task, ctx)
+                manifest["plugin"] = {
+                    "spec": plugin_spec,
+                    "status": plugin_result.get("status", "UNKNOWN"),
+                    "result_path": str(pathlib.Path(ctx.artifact_dir) / "plugin_result.json"),
+                    "id": plugin_result.get("plugin", {}).get("id"),
+                    "version": plugin_result.get("plugin", {}).get("version"),
+                }
+                _write_manifest(manifest_path, manifest)
+            except Exception as e:
+                manifest["plugin"] = {"spec": plugin_spec, "status": "ERROR", "errors": [{"error": str(e)}]}
+                _write_manifest(manifest_path, manifest)
+                if plugins_strict:
+                    raise
 
     phases = ["planner", "implementer", "verifier", "security", "pr_author"]
 

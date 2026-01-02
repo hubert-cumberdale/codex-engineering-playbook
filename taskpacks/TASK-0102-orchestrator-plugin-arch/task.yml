@@ -1,7 +1,7 @@
 id: TASK-0102
 title: Orchestrator v2 plugin architecture (engine-first)
 solution: core
-plugin: null
+plugin: "solutions.security.echo.plugin:EchoPlugin"
 
 constraints:
   safe_mode: true
