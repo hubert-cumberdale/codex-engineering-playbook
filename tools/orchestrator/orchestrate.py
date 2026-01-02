@@ -28,7 +28,6 @@ import sys
 import textwrap
 import time
 from typing import List, Optional, Tuple
-from dataclasses import fields, is_dataclass
 
 import yaml
 
@@ -98,7 +97,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "--enable-plugins",
         action="store_true",
         help="Run v2 solution plugin specified by taskpack.task.plugin (default: disabled). "
-            "Can also set Orch_ENABLE_PLUGINS=1."
+            "Can also set ORCH_ENABLE_PLUGINS=1."
     )
     p.add_argument(
         "--plugins-strict",
@@ -385,7 +384,6 @@ def main() -> None:
     manifest["plugins_enabled"] = bool(enable_plugins)
     manifest["plugin"] = {"spec": plugin_spec, "status": "SKIPPED"}
     _write_manifest(manifest_path, manifest)
-    print(f"[plugin] {plugin_spec} -> {manifest['plugin']['status']}")
 
     if enable_plugins:
         if not plugin_spec:
@@ -409,6 +407,7 @@ def main() -> None:
                 _write_manifest(manifest_path, manifest)
                 if plugins_strict:
                     raise
+        print(f"[plugin] {plugin_spec} -> {manifest['plugin']['status']}")
 
     phases = ["planner", "implementer", "verifier", "security", "pr_author"]
 

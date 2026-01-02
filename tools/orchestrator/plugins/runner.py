@@ -41,7 +41,11 @@ def run_plugin(taskpack: Dict[str, Any], ctx: ExecutionContext) -> Dict[str, Any
         return result
 
     plan = plugin.plan(taskpack, ctx)
-    raw = [_rel(ctx, a) for a in raw.artifacts]
+    raw = plugin.run(plan, ctx)
+    report_artifacts = plugin.report(raw, ctx)
+
+    # normalize paths AFTER you have them
+    raw_artifacts = [_rel(ctx, a) for a in raw.artifacts]
     report_artifacts = [_rel(ctx, a) for a in report_artifacts]
 
     result = {
