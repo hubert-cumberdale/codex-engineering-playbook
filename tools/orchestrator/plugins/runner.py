@@ -44,7 +44,6 @@ def run_plugin(taskpack: Dict[str, Any], ctx: ExecutionContext) -> Dict[str, Any
     raw = plugin.run(plan, ctx)
     report_artifacts = plugin.report(raw, ctx)
 
-    # normalize paths AFTER you have them
     raw_artifacts = [_rel(ctx, a) for a in raw.artifacts]
     report_artifacts = [_rel(ctx, a) for a in report_artifacts]
 
@@ -52,7 +51,7 @@ def run_plugin(taskpack: Dict[str, Any], ctx: ExecutionContext) -> Dict[str, Any
         "plugin": {"id": plugin.id(), "version": plugin.version()},
         "validation": {"ok": True, "errors": [], "warnings": validation.warnings},
         "plan": {"metadata": plan.metadata, "expected_artifacts": plan.expected_artifacts, "steps_count": len(plan.steps)},
-        "raw": {"metadata": raw.metadata, "artifacts": raw.artifacts},
+        "raw": {"metadata": raw.metadata, "artifacts": raw_artifacts},
         "report_artifacts": report_artifacts,
         "status": "OK",
     }

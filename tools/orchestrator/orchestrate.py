@@ -182,13 +182,14 @@ def git_commit(message: str) -> None:
     run(f"git commit -m {shlex.quote(message)}")
 
 
-def gh_pr_create(title: str, body: str, base: str = "main") -> None:
+def gh_pr_create(title: str, body: str, base: str = "main") -> str:
     # GitHub Actions usually has GH_TOKEN set automatically.
     # We'll rely on `gh` being present on runner (it is on ubuntu-latest).
     body_file = LOG_DIR / "pr_body.md"
     body_file.write_text(body, encoding="utf-8")
     cmd = f"gh pr create --base {shlex.quote(base)} --title {shlex.quote(title)} --body-file {shlex.quote(str(body_file))}"
-    run(cmd)
+    out = run(cmd).stdout.strip()
+    return out
 
 
 def codex_exec(prompt: str, *, log_name: str) -> Tuple[int, str]:
@@ -379,8 +380,12 @@ def main() -> None:
     tp = load_taskpack(taskpack_path)
 
     base_branch = git_current_branch()
-    branch_name = f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
-    run(f"git checkout -b {shlex.quote(branch_name)}")
+    explicit_branch = os.getenv("ORCH_BRANCH_NAME")
+    if explicit_branch:
+        branch_name = explicit_branch
+    else:
+        branch_name = f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"    
+        run(f"git checkout -b {shlex.quote(branch_name)}")
     run_codex = os.getenv("RUN_CODEX_SMOKE", "false").lower() == "true"
 
     plugin_spec = tp.task.get("plugin")
@@ -453,7 +458,8 @@ def main() -> None:
     pr_body = pr_body_path.read_text(encoding="utf-8") if pr_body_path.exists() else "(PR body not generated.)"
 
     title = f"{tp.id}: {tp.title}"
-    gh_pr_create(title=title, body=pr_body, base=base_branch)
+    pr_out = gh_pr_create(title=title, body=pr_body, base=base_branch)
+    print(f"PR: {pr_out}")
 
     manifest["result"] = "success"
     _write_manifest(manifest_path, manifest)
