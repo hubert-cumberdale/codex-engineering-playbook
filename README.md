@@ -6,7 +6,7 @@ This repository contains the **Codex Orchestrator** — a fault-tolerant enginee
 - **ChatGPT acts as the control plane**
 - **Codex (CLI + GitHub + Actions) acts as the execution plane**
 
-The system is optimized for **security engineering and Breach & Attack Simulation (AttackIQ-first)**, with strict safety, reproducibility, and auditability guarantees.
+The system is optimized for **security engineering, web development, and game development**, with strict safety, reproducibility, and auditability guarantees.
 
 ---
 

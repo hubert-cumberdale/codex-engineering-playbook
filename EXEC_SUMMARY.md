@@ -3,7 +3,7 @@
 ## What This Is
 Codex Orchestrator is a fault-tolerant engineering system where **ChatGPT operates as the control plane** and **Codex (CLI + GitHub + Actions) operates as the execution plane**.
 
-It is designed to deliver **repeatable, auditable, safety-first engineering outcomes**, with a primary focus on **security engineering and Breach & Attack Simulation (AttackIQ-first)**.
+It is designed to deliver **repeatable, auditable, safety-first engineering outcomes**, with a primary focus on **security engineering, web development, and game development**.
 
 ---
 

@@ -32,7 +32,7 @@ Location of truth:
 
 ### 2. Architecture & Design
 Includes:
-- New abstractions (e.g. bas_core)
+- New abstractions (e.g. security/solutions/bas_core)
 - Execution model changes
 - Orchestrator behavior
 

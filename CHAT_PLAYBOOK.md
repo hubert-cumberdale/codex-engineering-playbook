@@ -61,7 +61,7 @@ Used for:
 - System contracts
 - Versioning rules
 - Governance decisions
-- New abstractions (e.g. `bas_core`)
+- New abstractions (e.g. `security/solutions/bas_core`)
 
 Characteristics:
 - Low frequency
@@ -70,7 +70,7 @@ Characteristics:
 
 Examples:
 - `Codex Orchestrator v1 — Formalization`
-- `Codex Orchestrator v2 — bas_core Design`
+- `Codex Orchestrator v2 — security/solutions/bas_core Design`
 
 ---
 

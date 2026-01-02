@@ -20,7 +20,7 @@ A MAJOR version is required if **any** of the following change:
 
 MAJOR versions may:
 - Introduce new execution models
-- Add new abstractions (e.g., bas_core)
+- Add new abstractions (e.g., security/solutions/bas_core)
 - Change agent autonomy semantics
 
 ---
