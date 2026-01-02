@@ -6,9 +6,6 @@ on:
       - "taskpacks/**"
       - "tools/orchestrator/**"
 
-permissions:
-  contents: read
-
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -25,17 +22,8 @@ jobs:
 
       - name: Validate changed taskpacks
         run: |
-          BASE="${{ github.base_ref }}"
-          git fetch origin "$BASE" --depth=1
-
-          changed=$(git diff --name-only "origin/$BASE"...HEAD | grep -E '^taskpacks/[^/]+/task\.yml$' || true)
-          if [ -z "$changed" ]; then
-            echo "No taskpack changes detected."
-            exit 0
-          fi
-
-          for f in $changed; do
-            d=$(dirname "$f")
-            python tools/orchestrator/validate_taskpack.py "$d"
+          for d in taskpacks/*; do
+            if [ -d "$d" ] && [ -f "$d/task.yml" ]; then
+              python tools/orchestrator/validate_taskpack.py "$d"
+            fi
           done
-
