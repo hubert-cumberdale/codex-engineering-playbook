@@ -335,6 +335,16 @@ def run_acceptance(tp: TaskPack) -> None:
                     return
                 raise
 
+def ensure_https_remote_for_ci() -> None:
+    if os.getenv("GITHUB_ACTIONS", "").lower() == "true":
+        repo = os.getenv("GITHUB_REPOSITORY")  # e.g. owner/name
+        if not repo:
+            return
+        # Use token auth; GitHub Actions provides GITHUB_TOKEN
+        token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+        if not token:
+            return
+        run(f"git remote set-url origin https://x-access-token:{token}@github.com/{repo}.git", check=True)
 
 def main() -> None:
 
@@ -375,6 +385,7 @@ def main() -> None:
     manifest["plugins_enabled"] = bool(enable_plugins)
     manifest["plugin"] = {"spec": plugin_spec, "status": "SKIPPED"}
     _write_manifest(manifest_path, manifest)
+    print(f"[plugin] {plugin_spec} -> {manifest['plugin']['status']}")
 
     if enable_plugins:
         if not plugin_spec:
@@ -388,7 +399,7 @@ def main() -> None:
                 manifest["plugin"] = {
                     "spec": plugin_spec,
                     "status": plugin_result.get("status", "UNKNOWN"),
-                    "result_path": str(pathlib.Path(ctx.artifact_dir) / "plugin_result.json"),
+                    "result_path": str(pathlib.Path(ctx.artifact_dir).relative_to(ROOT) / "plugin_result.json"),
                     "id": plugin_result.get("plugin", {}).get("id"),
                     "version": plugin_result.get("plugin", {}).get("version"),
                 }
@@ -419,6 +430,7 @@ def main() -> None:
         if not ok:
             # Commit whatever we have (so we can inspect diffs in PR if desired)
             git_commit(f"chore: partial changes before failure in {phase}")
+            ensure_https_remote_for_ci()
             run("git push -u origin HEAD")
             raise SystemExit(f"Phase failed after {max_attempts} attempts: {phase}")
 
@@ -431,6 +443,7 @@ def main() -> None:
     git_commit(f"test: acceptance checks pass for {tp.id}")
 
     # Push branch and open PR
+    ensure_https_remote_for_ci()
     run("git push -u origin HEAD")
 
     pr_body_path = tp.path / "pr_body.md"

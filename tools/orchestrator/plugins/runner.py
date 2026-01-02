@@ -41,8 +41,8 @@ def run_plugin(taskpack: Dict[str, Any], ctx: ExecutionContext) -> Dict[str, Any
         return result
 
     plan = plugin.plan(taskpack, ctx)
-    raw = plugin.run(plan, ctx)
-    report_artifacts = plugin.report(raw, ctx)
+    raw = [_rel(ctx, a) for a in raw.artifacts]
+    report_artifacts = [_rel(ctx, a) for a in report_artifacts]
 
     result = {
         "plugin": {"id": plugin.id(), "version": plugin.version()},
@@ -56,6 +56,16 @@ def run_plugin(taskpack: Dict[str, Any], ctx: ExecutionContext) -> Dict[str, Any
     _write_plugin_result(ctx, result)
     return result
 
+def _rel(ctx: ExecutionContext, p: str) -> str:
+    # keep it simple and resilient across OS
+    try:
+        base = os.path.abspath(ctx.artifact_dir)
+        ap = os.path.abspath(p)
+        if ap.startswith(base + os.sep):
+            return os.path.relpath(ap, base)
+    except Exception:
+        pass
+    return p
 
 def _write_plugin_result(ctx: ExecutionContext, result: Dict[str, Any]) -> None:
     path = os.path.join(ctx.artifact_dir, "plugin_result.json")
