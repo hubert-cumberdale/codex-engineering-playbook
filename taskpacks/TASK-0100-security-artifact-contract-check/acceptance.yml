@@ -1,36 +1,17 @@
 version: 1
 
-acceptance:
-  summary:
-    description: >
-      The task must produce a concrete artifact containing
-      explicit security findings or results.
+deps: []
 
-  checks:
-    - id: artifacts_exist
-      description: >
-        At least one artifact must be present.
-      type: file_exists
-      paths:
-        - artifacts/**
+format:
+  commands:
+    - python -m compileall -q .
 
-    - id: artifact_contains_findings
-      description: >
-        Artifacts must contain explicit findings or results.
-      type: content_check
-      paths:
-        - artifacts/**
-      must_contain_any:
-        - "finding"
-        - "result"
-        - "status"
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
 
-    - id: no_scope_violation
-      description: >
-        No files outside the task pack may be modified.
-      type: git_diff_scope
-      allowed_paths:
-        - taskpacks/TASK-0100-security-artifact-contract-check/**
-
-  decision:
-    pass_if_all_checks_pass: true
+tests:
+  commands:
+    - python -m pytest -q
+    - python tools/acceptance/check_artifacts_present.py --path artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail

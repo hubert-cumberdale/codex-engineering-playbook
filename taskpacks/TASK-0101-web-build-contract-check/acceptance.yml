@@ -1,51 +1,18 @@
 version: 1
 
-acceptance:
-  summary:
-    description: >
-      The task must produce a concrete artifact documenting the web build/test
-      contract, and must not introduce deployment logic or exceed scope.
+deps: []
 
-  checks:
-    - id: artifacts_exist
-      description: >
-        At least one artifact must be present.
-      type: file_exists
-      paths:
-        - artifacts/**
+format:
+  commands:
+    - python -m compileall -q .
 
-    - id: artifact_mentions_build_test
-      description: >
-        Artifacts must explicitly reference build/test/validation as the success signal.
-      type: content_check
-      paths:
-        - artifacts/**
-      must_contain_any:
-        - "build"
-        - "test"
-        - "validate"
-        - "contract"
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0101-web-build-contract-check/
+    - python tools/acceptance/check_no_deploy_language.py --path .
 
-    - id: no_deploy_language
-      description: >
-        Artifacts must not describe deployment actions.
-      type: content_absence
-      paths:
-        - artifacts/**
-      forbidden_patterns:
-        - "deploy"
-        - "production"
-        - "kubectl"
-        - "terraform apply"
-        - "helm install"
-        - "apply to cluster"
-
-    - id: no_scope_violation
-      description: >
-        No files outside the task pack may be modified.
-      type: git_diff_scope
-      allowed_paths:
-        - taskpacks/TASK-0101-web-build-contract-check/**
-
-  decision:
-    pass_if_all_checks_pass: true
+tests:
+  commands:
+    - python -m pytest -q
+    - python tools/acceptance/check_artifacts_present.py --path artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any build test validate contract

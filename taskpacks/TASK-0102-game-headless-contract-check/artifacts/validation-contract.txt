@@ -1,0 +1,6 @@
+contract: game-deterministic-validation
+signal: headless/validation/export (non-interactive)
+engine: godot
+engine_version: 4.x (pin exact in real taskpacks)
+playtest: forbidden-by-default
+evidence: artifacts-only

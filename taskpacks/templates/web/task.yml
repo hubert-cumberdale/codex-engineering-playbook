@@ -1,4 +1,7 @@
 version: 1
+id: TEMPLATE-web
+title: "TEMPLATE: Web task pack"
+type: web
 
 task:
   name: "<TASK-ID>: <short web objective>"
@@ -12,6 +15,12 @@ constraints:
   allow_cloud_mutations: false
   allow_secrets: false
   allow_long_running: false
+  
+acceptance:
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Build/test/validation is the source of truth (no deploy by default)."
+    - "No deployment logic is introduced unless explicitly declared."
 
 execution:
   use_plugins: false
@@ -29,3 +38,4 @@ review:
   notes: >
     Web tasks must not include deployment logic or environment-
     specific behavior unless explicitly declared.
+

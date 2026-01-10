@@ -1,42 +1,17 @@
 version: 1
 
-acceptance:
-  summary:
-    description: >
-      The security task must produce concrete, reviewable evidence
-      that supports the stated security objective.
+deps: []
 
-  checks:
-    - id: artifacts_exist
-      description: >
-        At least one security-relevant artifact must be produced
-        (report, findings, logs, or structured output).
-      type: file_exists
-      paths:
-        - artifacts/**
+format:
+  commands:
+    - python -m compileall -q .
 
-    - id: no_unexpected_mutations
-      description: >
-        The task must not modify files outside the declared scope.
-      type: git_diff_scope
-      allowed_paths:
-        - artifacts/**
-        - docs/**
-        - README.md
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
 
-    - id: explicit_findings_or_assertions
-      description: >
-        Artifacts must contain explicit findings, assertions, or results,
-        not raw or unexplained output.
-      type: content_check
-      paths:
-        - artifacts/**
-      must_contain_any:
-        - "finding"
-        - "result"
-        - "status"
-        - "pass"
-        - "fail"
-
-  decision:
-    pass_if_all_checks_pass: true
+tests:
+  commands:
+    - python -m pytest -q
+    - python tools/acceptance/check_artifacts_present.py --path artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail

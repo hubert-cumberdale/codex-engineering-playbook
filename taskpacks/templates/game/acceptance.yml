@@ -1,10 +1,23 @@
 version: 1
+id: TEMPLATE-security
+title: "TEMPLATE: Security task pack"
+type: security
 
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+  
 acceptance:
   summary:
     description: >
       The game task must produce deterministic, reviewable output
       without requiring interactive playtesting.
+  must:
+  - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+  - "Artifacts are produced under artifacts/ and contain explicit findings/results."
+  - "No changes occur outside the task pack scope."
 
   checks:
     - id: build_or_validation_succeeds

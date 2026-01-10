@@ -1,0 +1,39 @@
+version: 1
+id: TEMPLATE-game
+title: "TEMPLATE: Game task pack"
+type: game
+
+task:
+  name: "TASK-0102: Validate game headless/deterministic acceptance contract"
+  pillar: game
+  description: >
+    Validate that a game task pack expresses success via deterministic,
+    non-interactive validation signals and produces reviewable artifacts,
+    without plugins, network access, or environment mutation.
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+acceptance:
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Validation is deterministic/headless (no subjective playtest criteria)."
+    - "Engine/version intent is explicitly declared in task/spec/artifacts."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 10
+
+artifacts:
+  required:
+    - artifacts/**
+
+review:
+  required: true
+  notes: >
+    This task validates the baseline game authoring and acceptance contract:
+    deterministic validation, engine/version declaration, no playtest criteria,
+    scoped diffs.

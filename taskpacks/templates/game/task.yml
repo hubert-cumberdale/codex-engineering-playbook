@@ -1,11 +1,7 @@
 version: 1
-
-task:
-  name: "<TASK-ID>: <short game objective>"
-  pillar: game
-  description: >
-    Implement or validate game code, systems, or tooling in a
-    deterministic and non-interactive way.
+id: TEMPLATE-game
+title: "TEMPLATE: Game task pack"
+type: game
 
 constraints:
   allow_network: false
@@ -13,18 +9,8 @@ constraints:
   allow_secrets: false
   allow_long_running: false
 
-execution:
-  use_plugins: false
-  timeout_minutes: 25
-
-artifacts:
-  optional:
-    - exports/**
-    - builds/**
-    - logs/**
-
-review:
-  required: true
-  notes: >
-    Game tasks must be engine-version pinned and must not rely
-    on subjective or interactive validation.
+acceptance:
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Validation is deterministic/headless (no subjective playtest criteria)."
+    - "Engine/version intent is explicitly declared in task/spec/artifacts."
