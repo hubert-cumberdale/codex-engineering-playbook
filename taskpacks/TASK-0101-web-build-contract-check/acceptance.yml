@@ -1,18 +1,22 @@
 version: 1
-
 deps: []
 
 format:
   commands:
-    - python -m compileall -q .
+    # Keep format lightweight and repo-scoped (avoid compiling user home dirs)
+    - python -m compileall -q tools
 
 lint:
   commands:
+    # Strict canary: only this taskpack may change when run in isolation
     - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0101-web-build-contract-check/
+    # Web posture: ensure no deploy language slips into repo content
     - python tools/acceptance/check_no_deploy_language.py --path .
 
 tests:
   commands:
+    # Required by validator; should return 0 if your canary test exists
     - python -m pytest -q
-    - python tools/acceptance/check_artifacts_present.py --path artifacts
-    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any build test validate contract
+    # Evidence-first: taskpack artifacts must exist and mention build/test/validate/contract
+    - python tools/acceptance/check_artifacts_present.py --path taskpacks/TASK-0101-web-build-contract-check/artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path taskpacks/TASK-0101-web-build-contract-check/artifacts --any build test validate contract
