@@ -19,6 +19,11 @@ It is intentionally **orthogonal** to automated validation and orchestrator logi
 ---
 
 ## How to Use This Rubric
+> **Important**
+> This rubric supplements — but does not replace — the **Tier-1 Documentation Checklist**.
+>
+> Reviewers MUST first confirm Tier-1 compliance before applying this rubric.
+> → See: [Tier-1 Documentation Checklist](./DOC_CHECKLIST_TIER1.md)
 
 Reviewers should:
 
