@@ -121,4 +121,8 @@ must:
 - Introducing plugin requirements
 - Assuming a specific web framework
 
+## See also
+- **Skill: web-build-artifact-evidence** — patterns for producing small, deterministic build evidence artifacts that acceptance can validate.
+- **TASK-0101-web-build-contract-check** — canonical example of a web Task Pack that combines command-based acceptance with build contract evidence.
+
 ---

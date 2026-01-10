@@ -178,3 +178,10 @@ Do not add new orchestrator logic. Evidence is validated using:
 - Producing or storing large build outputs
 - Introducing new validation tooling or orchestrator behavior
 - Requiring plugins
+
+## See also
+- **TASK-0101-web-build-contract-check** — canonical example of a web Task Pack that proves a build contract using small, textual artifacts.
+- **Skill: web-acceptance-contracts** — complementary patterns for writing command-based acceptance that invokes the build and validates evidence.
+- **Task Pack templates (web)** — reference layouts under `taskpacks/templates/web/` that demonstrate artifact directories and acceptance structure.
+
+---
