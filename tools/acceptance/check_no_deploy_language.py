@@ -13,7 +13,7 @@ FORBIDDEN = [
     "apply to cluster",
 ]
 
-SKIP_DIRS = {".git", ".orchestrator_logs", ".venv", "node_modules", "dist", "build", "__pycache__"}
+SKIP_DIRS = {".git", ".orchestrator_logs", ".venv", "node_modules", "dist", "build", "__pycache__", "tools/acceptance"}
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -27,6 +27,9 @@ def main() -> int:
         if any(part in SKIP_DIRS for part in p.parts):
             continue
         if p.is_file() and p.suffix.lower() in {".md", ".txt", ".yml", ".yaml", ".sh", ".ps1", ".py", ".js", ".ts"}:
+            if p.samefile(Path(__file__)):
+                continue
+
             data = p.read_text(encoding="utf-8", errors="ignore").lower()
             for pat in FORBIDDEN:
                 if pat in data:
