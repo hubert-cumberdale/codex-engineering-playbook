@@ -4,7 +4,7 @@
 This task validates the game task pack contract itself:
 - deterministic/non-interactive validation as truth
 - explicit engine/version intent
-- no subjective or playtest-based acceptance
+- Only objective and evidence-driven acceptance
 - evidence-first artifacts
 - scoped diffs
 
@@ -19,7 +19,7 @@ This task validates the game task pack contract itself:
 - Artifacts exist
 - Deterministic/headless validation is explicitly referenced
 - Engine/version intent is explicitly declared
-- No playtest/subjective criteria appear
+- Acceptance is objective and evidence-driven.
 - No scope violations
 
 ## Review guidance

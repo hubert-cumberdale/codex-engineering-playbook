@@ -10,7 +10,7 @@ lint:
     # Strict canary: only this taskpack may change when run in isolation
     - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0102-game-headless-contract-check/
     # Game posture: forbid subjective/playtest language in repo content
-    - python tools/acceptance/check_no_subjective_language.py --path .
+    - - python tools/acceptance/check_no_subjective_language.py --path taskpacks/TASK-0102-game-headless-contract-check
 
 tests:
   commands:

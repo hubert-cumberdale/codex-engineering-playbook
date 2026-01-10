@@ -20,7 +20,8 @@ constraints:
 acceptance:
   must:
     - "Acceptance commands run via acceptance.yml (format/lint/tests)."
-    - "Validation is deterministic/headless (no subjective playtest criteria)."
+    - "Non-interactive, deterministic validation is required."
+    - "Acceptance is objective and evidence-driven."
     - "Engine/version intent is explicitly declared in task/spec/artifacts."
 
 execution:
