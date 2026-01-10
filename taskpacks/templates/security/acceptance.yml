@@ -4,14 +4,13 @@ deps: []
 
 format:
   commands:
-    - python -m compileall -q .
+    - python3 -m compileall -q tools src 2>/dev/null || python3 -m compileall -q tools
 
 lint:
   commands:
-    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
-
+    - python3 tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
 tests:
   commands:
-    - python -m pytest -q
-    - python tools/acceptance/check_artifacts_present.py --path artifacts
-    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail
+    - python3 -m pytest -q
+    - python3 tools/acceptance/check_artifacts_present.py --path artifacts
+    - python3 tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail

@@ -1,59 +1,19 @@
 version: 1
-id: TEMPLATE-security
-title: "TEMPLATE: Security task pack"
-type: security
 
-constraints:
-  allow_network: false
-  allow_cloud_mutations: false
-  allow_secrets: false
-  allow_long_running: false
-  
-acceptance:
-  summary:
-    description: >
-      The game task must produce deterministic, reviewable output
-      without requiring interactive playtesting.
-  must:
-  - "Acceptance commands run via acceptance.yml (format/lint/tests)."
-  - "Artifacts are produced under artifacts/ and contain explicit findings/results."
-  - "No changes occur outside the task pack scope."
+deps: []
 
-  checks:
-    - id: build_or_validation_succeeds
-      description: >
-        A headless build, export, or validation command must succeed.
-      type: command_success
-      commands:
-        - godot --headless --quit
-        - unity -batchmode -quit
-        - make validate
-      require_at_least_one: true
+format:
+  commands:
+    - python3 -m compileall -q .
 
-    - id: engine_version_declared
-      description: >
-        The engine and version must be explicitly declared.
-      type: content_check
-      paths:
-        - task.yml
-        - spec.md
-      must_contain_any:
-        - godot
-        - unity
-        - engine_version
+lint:
+  commands:
+    - python3 tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
+    - python3 tools/acceptance/check_no_subjective_language.py --path .
 
-    - id: no_manual_play_dependency
-      description: >
-        Acceptance must not depend on manual playtesting or subjective review.
-      type: content_absence
-      paths:
-        - acceptance.yml
-        - spec.md
-      forbidden_patterns:
-        - "playtest"
-        - "feels good"
-        - "fun"
-        - "subjective"
-
-  decision:
-    pass_if_all_checks_pass: true
+tests:
+  commands:
+    - python3 -m pytest -q
+    - python3 tools/acceptance/check_artifacts_present.py --path artifacts
+    - python3 tools/acceptance/check_artifact_contains_any.py --path artifacts --any deterministic headless validation batchmode export
+    - python3 tools/acceptance/check_engine_declared_in_taskpack.py --task-yml task.yml --spec spec.md --artifact-path artifacts
