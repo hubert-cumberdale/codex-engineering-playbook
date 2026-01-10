@@ -49,6 +49,23 @@ They are authoritative and contract-bearing.
 
 ---
 
+## Human Review Guidance (Non-Blocking)
+
+Passing this checklist confirms **contract and acceptance compliance**.
+
+For qualitative review of example Task Packs — including scope discipline,
+evidence quality, and pillar-appropriate behavior — reviewers SHOULD also
+consult the Task Pack Review Rubric:
+
+→ `docs/task-pack-review-rubric.md`
+
+The rubric:
+- Does not introduce new requirements
+- Does not affect validation or CI
+- Exists to standardize human review and example quality
+
+---
+
 ## Final Check
 - [ ] A new contributor could read this document and form a **correct mental model**
 - [ ] No contradiction with other Tier 1 docs
@@ -56,3 +73,8 @@ They are authoritative and contract-bearing.
 ---
 
 > If any item fails, the document must be revised before merge.
+
+📌 Governance rule
+Any PR touching Tier 1 docs should either:
+- explicitly say “Checklist passed”, or
+- explain why an item does not apply.
