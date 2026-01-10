@@ -1,3 +1,46 @@
-tests:
-  commands:
-    - "python -m pytest -q"
+version: 1
+
+acceptance:
+  summary:
+    description: >
+      The game task must produce deterministic, reviewable output
+      without requiring interactive playtesting.
+
+  checks:
+    - id: build_or_validation_succeeds
+      description: >
+        A headless build, export, or validation command must succeed.
+      type: command_success
+      commands:
+        - godot --headless --quit
+        - unity -batchmode -quit
+        - make validate
+      require_at_least_one: true
+
+    - id: engine_version_declared
+      description: >
+        The engine and version must be explicitly declared.
+      type: content_check
+      paths:
+        - task.yml
+        - spec.md
+      must_contain_any:
+        - godot
+        - unity
+        - engine_version
+
+    - id: no_manual_play_dependency
+      description: >
+        Acceptance must not depend on manual playtesting or subjective review.
+      type: content_absence
+      paths:
+        - acceptance.yml
+        - spec.md
+      forbidden_patterns:
+        - "playtest"
+        - "feels good"
+        - "fun"
+        - "subjective"
+
+  decision:
+    pass_if_all_checks_pass: true
