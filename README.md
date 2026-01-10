@@ -1,4 +1,5 @@
-# codex-engineering-playbook
+> This README is an entry point and index. Authoritative system documentation lives under `/docs`.
+
 # Codex Engineering Playbook
 
 This repository contains the **Codex Orchestrator** — a fault-tolerant engineering system where:
@@ -12,15 +13,15 @@ The system is optimized for **security engineering, web development, and game de
 
 ## Start Here
 
-👉 **[EXEC_SUMMARY.md](./EXEC_SUMMARY.md)**  
+👉 **[EXEC_SUMMARY.md](./docs/EXEC_SUMMARY.md)**  
 This is the authoritative overview of what this system is, why it exists, and what guarantees it provides.
 
 ---
 
 ## Governance & Contracts
 
-- **[VERSIONING.md](./VERSIONING.md)** — How change is governed  
-- **[GOVERNANCE.md](./GOVERNANCE.md)** — Decision authority and escalation  
+- **[VERSIONING.md](./docs/VERSIONING.md)** — How change is governed  
+- **[GOVERNANCE.md](./docs/GOVERNANCE.md)** — Decision authority and escalation  
 - **Release history:** [`/docs/releases`](./docs/releases)
 
 ---
@@ -37,14 +38,13 @@ This is the authoritative overview of what this system is, why it exists, and wh
 
 ---
 
-## Rule of Thumb
+## Authority Rule
 
-If a question cannot be answered by:
-1. EXEC_SUMMARY.md  
-2. VERSIONING.md  
-3. GOVERNANCE.md  
+This README is non-authoritative.
 
-…it is either undefined or out of scope.
+If a question about system behavior, guarantees, or scope cannot be answered by the Tier 1 documentation under `/docs`, it is either undefined or out of scope.
+
+See: `/docs/README.md` for the documentation authority model.
 
 ---
 
