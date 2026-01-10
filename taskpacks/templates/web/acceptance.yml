@@ -1,3 +1,48 @@
-tests:
-  commands:
-    - "python -m pytest -q"
+version: 1
+
+acceptance:
+  summary:
+    description: >
+      The web task must successfully build and/or test, and must not
+      introduce undeclared side effects.
+
+  checks:
+    - id: build_or_test_succeeds
+      description: >
+        A build, test, or validation command must succeed.
+      type: command_success
+      commands:
+        - npm test
+        - npm run build
+        - pytest
+        - make test
+      require_at_least_one: true
+
+    - id: no_production_deployments
+      description: >
+        The task must not contain deployment logic or environment-specific
+        production actions.
+      type: content_absence
+      paths:
+        - .
+      forbidden_patterns:
+        - kubectl apply
+        - terraform apply
+        - aws deploy
+        - production
+        - prod_
+
+    - id: scoped_file_changes
+      description: >
+        File changes must be limited to the declared project scope.
+      type: git_diff_scope
+      allowed_paths:
+        - src/**
+        - tests/**
+        - docs/**
+        - README.md
+        - package.json
+        - pyproject.toml
+
+  decision:
+    pass_if_all_checks_pass: true
