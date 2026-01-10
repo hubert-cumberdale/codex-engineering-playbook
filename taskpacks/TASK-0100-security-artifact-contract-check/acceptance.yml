@@ -1,0 +1,17 @@
+version: 1
+
+deps: []
+
+format:
+  commands:
+    - python -m compileall -q .
+
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0100-security-artifact-contract-check/
+
+tests:
+  commands:
+    - python -m pytest -q
+    - python tools/acceptance/check_artifacts_present.py --path artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail

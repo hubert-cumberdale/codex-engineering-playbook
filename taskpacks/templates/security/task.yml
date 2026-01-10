@@ -1,0 +1,39 @@
+version: 1
+id: TEMPLATE-security
+title: "TEMPLATE: Security task pack"
+type: security
+
+task:
+  name: "<TASK-ID>: <short security objective>"
+  pillar: security
+  description: >
+    Perform a bounded security engineering task that produces
+    concrete, reviewable evidence.
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+  
+acceptance:
+  file: acceptance.yml
+  notes: "Evidence-first security validation; offline by default."
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Artifacts are produced under artifacts/ and contain explicit findings/results."
+    - "No changes occur outside the task pack scope."
+    
+execution:
+  use_plugins: false   # must be explicitly enabled per task
+  timeout_minutes: 15
+
+artifacts:
+  required:
+    - artifacts/**
+
+review:
+  required: true
+  notes: >
+    Security tasks must be reviewed for scope, evidence quality,
+    and unintended side effects.

@@ -1,0 +1,41 @@
+version: 1
+id: TEMPLATE-web
+title: "TEMPLATE: Web task pack"
+type: web
+
+task:
+  name: "<TASK-ID>: <short web objective>"
+  pillar: web
+  description: >
+    Implement or modify web application code in a buildable,
+    testable, and reviewable manner.
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+  
+acceptance:
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Build/test/validation is the source of truth (no deploy by default)."
+    - "No deployment logic is introduced unless explicitly declared."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 20
+
+artifacts:
+  optional:
+    - dist/**
+    - build/**
+    - coverage/**
+    - test-results/**
+
+review:
+  required: true
+  notes: >
+    Web tasks must not include deployment logic or environment-
+    specific behavior unless explicitly declared.
+

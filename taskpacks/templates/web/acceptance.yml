@@ -1,0 +1,18 @@
+version: 1
+
+deps: []
+
+format:
+  commands:
+    - python -m compileall -q .
+
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
+    - python tools/acceptance/check_no_deploy_language.py --path .
+
+tests:
+  commands:
+    - python -m pytest -q
+    - python tools/acceptance/check_artifacts_present.py --path artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any build test validate contract

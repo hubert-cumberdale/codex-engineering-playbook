@@ -1,0 +1,38 @@
+version: 1
+id: TEMPLATE-web
+title: "TEMPLATE: Web task pack"
+type: web
+
+task:
+  name: "TASK-0101: Validate web build/test acceptance contract"
+  pillar: web
+  description: >
+    Validate that a web task pack expresses success via build/test signals
+    (or equivalent deterministic validation) and produces reviewable artifacts,
+    without deployment, plugins, network access, or environment mutation.
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+acceptance:
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Build/test/validation is the source of truth (no deploy by default)."
+    - "No deployment logic is introduced unless explicitly declared."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 10
+
+artifacts:
+  required:
+    - artifacts/**
+
+review:
+  required: true
+  notes: >
+    This task validates the baseline web authoring and acceptance contract:
+    build/test as truth, no deployment, scoped diffs.

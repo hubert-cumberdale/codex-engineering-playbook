@@ -46,6 +46,18 @@ A task that cannot be represented as a Task Pack does not belong in the system.
 
 ---
 
+## v2 Plugins (Solution Integration)
+The orchestrator can optionally run a solution plugin declared in a taskpack (`task.yml: plugin:`).
+
+- Enable: `ORCH_ENABLE_PLUGINS=1`
+- Strict mode: `ORCH_PLUGINS_STRICT=1`
+- Stable branch: `ORCH_BRANCH_NAME=codex/<task-id>`
+- Base branch override: `BASE_BRANCH=main`
+
+Artifacts include `plugin_result.json` and a manifest entry for auditability.
+
+---
+
 ## Safety Model
 Safety is **default-on**, not optional.
 - No network access unless declared
@@ -74,7 +86,7 @@ v1 provides:
 - Safety model
 - Circuit breakers
 - Evidence guarantees
-- AttackIQ-first BAS alignment
+- Solution-agnostic architecture with solution plugins living under /solutions (e.g., security/web/game)
 
 v1 explicitly does **not** include:
 - Long-lived agents

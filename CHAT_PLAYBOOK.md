@@ -121,6 +121,7 @@ Switching between:
 - Architecture ↔ implementation
 - Governance ↔ debugging
 - One Task Pack ↔ another Task Pack
+- Domains (security/web/game)
 
 ---
 
@@ -148,6 +149,7 @@ When a MAJOR version is closed:
 Example:
 Codex Orchestrator v2 — Design
 
+Start a new chat at each milestone (merge)
 
 ---
 

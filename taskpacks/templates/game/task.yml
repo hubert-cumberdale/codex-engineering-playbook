@@ -1,0 +1,16 @@
+version: 1
+id: TEMPLATE-game
+title: "TEMPLATE: Game task pack"
+type: game
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+acceptance:
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Validation is deterministic/headless (no subjective playtest criteria)."
+    - "Engine/version intent is explicitly declared in task/spec/artifacts."
