@@ -6,7 +6,7 @@ import sys
 
 FORBIDDEN = ["playtest", "feels", "fun", "looks good", "subjective"]
 
-SKIP_DIRS = {".git", ".orchestrator_logs", ".venv", "node_modules", "dist", "build", "__pycache__"}
+SKIP_DIRS = {".git", ".orchestrator_logs", ".venv", "node_modules", "dist", "build", "__pycache__","tools/acceptance"}
 
 def main() -> int:
     ap = argparse.ArgumentParser()

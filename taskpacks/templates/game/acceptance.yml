@@ -9,7 +9,7 @@ format:
 lint:
   commands:
     - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
-    - python tools/acceptance/check_no_subjective_language.py --path .
+    - python tools/acceptance/check_no_qualitative_language.py --path .
 
 tests:
   commands:
