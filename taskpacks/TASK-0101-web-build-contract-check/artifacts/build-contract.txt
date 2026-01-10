@@ -1,0 +1,4 @@
+contract: web-build-test
+signal: build/test/validate
+deploy: forbidden-by-default
+evidence: artifacts-only
