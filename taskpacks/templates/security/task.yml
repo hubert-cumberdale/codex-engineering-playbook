@@ -1,18 +1,28 @@
-id: "TASK-0000"
-title: "Short title"
-owner: "you"
-priority: "P2"
-type: "script|service|library|infra|app"
+version: 1
+
+task:
+  name: "<TASK-ID>: <short security objective>"
+  pillar: security
+  description: >
+    Perform a bounded security engineering task that produces
+    concrete, reviewable evidence.
 
 constraints:
   allow_network: false
   allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
 
-acceptance:
-  must:
-    - "All pytest tests pass"
+execution:
+  use_plugins: false   # must be explicitly enabled per task
+  timeout_minutes: 15
 
-skills:
-  prefer:
-    - "python-cli-standard"
-    - "pr-author"
+artifacts:
+  required:
+    - artifacts/**
+
+review:
+  required: true
+  notes: >
+    Security tasks must be reviewed for scope, evidence quality,
+    and unintended side effects.
