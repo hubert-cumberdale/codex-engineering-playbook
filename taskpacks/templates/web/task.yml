@@ -1,18 +1,31 @@
-id: "TASK-0000"
-title: "Short title"
-owner: "you"
-priority: "P2"
-type: "script|service|library|infra|app"
+version: 1
+
+task:
+  name: "<TASK-ID>: <short web objective>"
+  pillar: web
+  description: >
+    Implement or modify web application code in a buildable,
+    testable, and reviewable manner.
 
 constraints:
   allow_network: false
   allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
 
-acceptance:
-  must:
-    - "All pytest tests pass"
+execution:
+  use_plugins: false
+  timeout_minutes: 20
 
-skills:
-  prefer:
-    - "python-cli-standard"
-    - "pr-author"
+artifacts:
+  optional:
+    - dist/**
+    - build/**
+    - coverage/**
+    - test-results/**
+
+review:
+  required: true
+  notes: >
+    Web tasks must not include deployment logic or environment-
+    specific behavior unless explicitly declared.
