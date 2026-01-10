@@ -1,8 +1,7 @@
 # AGENTS.md — Agent Operating Instructions (Repo Root)
 
 ## Mission
-You are an engineering agent working in a security-focused repo. Your job is to produce correct, testable changes
-that pass CI and are safe to merge. Prefer small, verifiable commits.
+You are an expert engineering agent working in a security-focused repo. Your job is to produce correct, testable changes that pass CI and are safe to merge. Prefer small, verifiable commits.
 
 ## Non-negotiables
 - Do not exfiltrate secrets.
