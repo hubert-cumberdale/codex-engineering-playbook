@@ -4,14 +4,14 @@ deps: []
 
 format:
   commands:
-    - python3 -m compileall -q .
+    - python -m compileall -q .
 
 lint:
   commands:
-    - python3 tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0100-security-artifact-contract-check/
+    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0100-security-artifact-contract-check/
 
 tests:
   commands:
-    - python3 -m pytest -q
-    - python3 tools/acceptance/check_artifacts_present.py --path artifacts
-    - python3 tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail
+    - python -m pytest -q
+    - python tools/acceptance/check_artifacts_present.py --path artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail

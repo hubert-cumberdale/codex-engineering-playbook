@@ -4,16 +4,16 @@ deps: []
 
 format:
   commands:
-    - python3 -m compileall -q .
+    - python -m compileall -q .
 
 lint:
   commands:
-    - python3 tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0102-game-headless-contract-check/
-    - python3 tools/acceptance/check_no_subjective_language.py --path .
+    - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/TASK-0102-game-headless-contract-check/
+    - python tools/acceptance/check_no_subjective_language.py --path .
 
 tests:
   commands:
-    - python3 -m pytest -q
-    - python3 tools/acceptance/check_artifacts_present.py --path artifacts
-    - python3 tools/acceptance/check_artifact_contains_any.py --path artifacts --any deterministic headless validation batchmode export
-    - python3 tools/acceptance/check_engine_declared_in_taskpack.py --task-yml task.yml --spec spec.md --artifact-path artifacts
+    - python -m pytest -q
+    - python tools/acceptance/check_artifacts_present.py --path artifacts
+    - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any deterministic headless validation batchmode export
+    - python tools/acceptance/check_engine_declared_in_taskpack.py --task-yml task.yml --spec spec.md --artifact-path artifacts
