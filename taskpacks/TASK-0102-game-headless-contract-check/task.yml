@@ -36,5 +36,5 @@ review:
   required: true
   notes: >
     This task validates the baseline game authoring and acceptance contract:
-    deterministic validation, engine/version declaration, no playtest criteria,
+    deterministic validation, engine/version declaration, object/evidence-based criteria,
     scoped diffs.
