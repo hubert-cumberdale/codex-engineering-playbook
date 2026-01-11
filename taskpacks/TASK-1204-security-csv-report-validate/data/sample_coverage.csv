@@ -1,0 +1,7 @@
+technique_id,control_id,status,owner,notes
+T1059,C-001,covered,secops,validated via simulation
+T1059,C-002,partial,secops,telemetry present; alert tuning needed
+T1110,C-003,missing,iam,no detections yet
+T1047,C-004,covered,edr,endpoint rule enabled
+T1047,C-005,partial,edr,coverage limited to Windows
+T1027,C-006,missing,secops,requires parser updates

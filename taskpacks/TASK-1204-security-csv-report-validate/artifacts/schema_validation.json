@@ -1,0 +1,6 @@
+{
+  "errors": [],
+  "status": "ok",
+  "taskpack_id": "TASK-1204-security-csv-report-validate",
+  "validated_path": "artifacts/report.json"
+}

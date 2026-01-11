@@ -1,0 +1,19 @@
+id: TASK-1204-security-csv-report-validate
+title: "CSV ingestion → coverage report → schema validation evidence (deterministic)"
+pillar: security
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+inputs:
+  description: >
+    Self-contained example that parses a CSV coverage dataset, generates a summary report,
+    and validates report schema deterministically. No external dependencies.
+
+outputs:
+  artifacts_dir: artifacts
+  evidence:
+    - artifacts/report.json
+    - artifacts/report.md
+    - artifacts/schema_validation.json
