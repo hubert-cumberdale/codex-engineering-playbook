@@ -1,0 +1,75 @@
+{
+  "detail_rows": [
+    {
+      "control_id": "C-006",
+      "owner": "secops",
+      "status": "missing",
+      "technique_id": "T1027"
+    },
+    {
+      "control_id": "C-004",
+      "owner": "edr",
+      "status": "covered",
+      "technique_id": "T1047"
+    },
+    {
+      "control_id": "C-005",
+      "owner": "edr",
+      "status": "partial",
+      "technique_id": "T1047"
+    },
+    {
+      "control_id": "C-001",
+      "owner": "secops",
+      "status": "covered",
+      "technique_id": "T1059"
+    },
+    {
+      "control_id": "C-002",
+      "owner": "secops",
+      "status": "partial",
+      "technique_id": "T1059"
+    },
+    {
+      "control_id": "C-003",
+      "owner": "iam",
+      "status": "missing",
+      "technique_id": "T1110"
+    }
+  ],
+  "source_csv": {
+    "path": "data/sample_coverage.csv",
+    "sha256": "8d17bb75443f2ee5983cfbfe8d1c4080cac81f9b7b3d8a6601287e3d4f54009e"
+  },
+  "summary": {
+    "by_status": {
+      "covered": 2,
+      "missing": 2,
+      "partial": 2
+    },
+    "by_technique": {
+      "T1027": {
+        "covered": 0,
+        "missing": 1,
+        "partial": 0
+      },
+      "T1047": {
+        "covered": 1,
+        "missing": 0,
+        "partial": 1
+      },
+      "T1059": {
+        "covered": 1,
+        "missing": 0,
+        "partial": 1
+      },
+      "T1110": {
+        "covered": 0,
+        "missing": 1,
+        "partial": 0
+      }
+    },
+    "total_rows": 6
+  },
+  "taskpack_id": "TASK-1204-security-csv-report-validate"
+}
