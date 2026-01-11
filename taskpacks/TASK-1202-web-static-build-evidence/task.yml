@@ -1,0 +1,14 @@
+id: TASK-1202-web-static-build-evidence
+title: "Static mini-site build + link integrity evidence (no deps)"
+pillar: web
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+outputs:
+  artifacts_dir: artifacts
+  evidence:
+    - artifacts/build_manifest.json
+    - artifacts/site/index.html
+    - artifacts/link_report.json

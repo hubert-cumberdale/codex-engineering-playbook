@@ -1,0 +1,5 @@
+must:
+  - python -m compileall -q src tests tools
+  - python tools/lint_check.py
+  - python -m unittest discover -s tests -p "test_*.py" -q
+  - python tools/make_evidence.py

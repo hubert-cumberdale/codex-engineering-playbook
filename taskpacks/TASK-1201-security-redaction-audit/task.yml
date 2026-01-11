@@ -1,0 +1,18 @@
+id: TASK-1201-security-redaction-audit
+title: "Redaction utility + audit evidence pack (deterministic, no secrets)"
+pillar: security
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+inputs:
+  description: >
+    Self-contained example Task Pack that demonstrates secret hygiene via deterministic
+    redaction and evidence generation. No external dependencies.
+
+outputs:
+  artifacts_dir: artifacts
+  evidence:
+    - artifacts/evidence.json
+    - artifacts/redacted_sample.txt

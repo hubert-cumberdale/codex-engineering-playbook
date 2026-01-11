@@ -1,0 +1,5 @@
+User: alice@example.com
+Peer: bob@example.org
+Host: 192.0.2.10
+Note: token=THIS_IS_A_FAKE_TOKEN_1234567890ABCDE
+Other: ok
