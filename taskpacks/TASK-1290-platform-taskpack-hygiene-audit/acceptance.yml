@@ -1,0 +1,4 @@
+must:
+  - python -m compileall -q tools
+  - python tools/lint_check.py
+  - python tools/hygiene_scan.py

@@ -1,0 +1,13 @@
+id: TASK-1290-platform-taskpack-hygiene-audit
+title: "Platform hygiene audit for Task Packs and docs (v1.2)"
+pillar: security
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+outputs:
+  artifacts_dir: artifacts
+  evidence:
+    - artifacts/hygiene_report.json
+    - artifacts/hygiene_report.md
