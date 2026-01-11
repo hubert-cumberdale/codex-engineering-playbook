@@ -19,7 +19,7 @@ python -m compileall -q src tests tools
 python tools/lint_check.py
 python -m unittest discover -s tests -p "test_*.py" -q
 python tools/make_evidence.py
-````
+```
 
 ### Web — TASK-1202-web-static-build-evidence
 
@@ -66,3 +66,24 @@ python tools/bundle_content.py
 * Task Pack Review Rubric (v1.x): `docs/task-pack-review-rubric.md`
 
 ---
+
+### Security — TASK-1204-security-csv-report-validate
+Path: `taskpacks/TASK-1204-security-csv-report-validate`
+
+Demonstrates a multi-step, evidence-first pipeline:
+CSV ingestion → report generation → schema validation.
+
+Evidence:
+- `artifacts/report.json`
+- `artifacts/report.md`
+- `artifacts/schema_validation.json`
+
+Run:
+```bash
+cd taskpacks/TASK-1204-security-csv-report-validate
+python -m compileall -q src tests tools
+python tools/lint_check.py
+python -m unittest discover -s tests -p "test_*.py" -q
+python tools/generate_report.py
+python tools/validate_report.py
+```

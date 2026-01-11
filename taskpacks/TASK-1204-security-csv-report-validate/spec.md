@@ -40,3 +40,5 @@ See `acceptance.yml` (command-based and local).
   - [ ] `errors` = `[]`
 - [ ] No secrets or real credentials appear in inputs or artifacts
 - [ ] Task Pack runs in isolation without network access
+
+> “This Task Pack is an example and should remain validator-clean.”
