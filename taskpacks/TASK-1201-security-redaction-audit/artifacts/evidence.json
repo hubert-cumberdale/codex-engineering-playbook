@@ -1,0 +1,20 @@
+{
+  "inputs": {
+    "input_sha256": "6ca30feb5ea818f13efa71b0bb4a66d13540fccf06b518a66f20a9d50af2e2dc",
+    "sample_input_path": "src/sample_input.txt"
+  },
+  "outputs": {
+    "output_sha256": "0f73615f3b297b0b02f8c7968e2a546ec9fb195e15ed5b8356e8d57b8943cd7e",
+    "redacted_sample_path": "artifacts/redacted_sample.txt"
+  },
+  "redaction_counts": {
+    "email": 2,
+    "ipv4": 1,
+    "token": 1
+  },
+  "taskpack_id": "TASK-1201-security-redaction-audit",
+  "tool": {
+    "name": "make_evidence.py",
+    "python": "3.12.3"
+  }
+}

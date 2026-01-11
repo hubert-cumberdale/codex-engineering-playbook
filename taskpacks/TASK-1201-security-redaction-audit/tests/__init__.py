@@ -1,0 +1,1 @@
+# Ensures unittest discovery treats `tests` as a package in some environments.

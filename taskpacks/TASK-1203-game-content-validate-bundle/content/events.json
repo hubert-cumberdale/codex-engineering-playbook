@@ -1,0 +1,19 @@
+
+[
+  {
+    "id": "start",
+    "title": "Wake Up",
+    "choices": [
+      { "text": "Get coffee", "next_id": "coffee" },
+      { "text": "Go back to sleep", "next_id": null }
+    ]
+  },
+  {
+    "id": "coffee",
+    "title": "Coffee Shop",
+    "choices": [
+      { "text": "Order espresso", "next_id": null },
+      { "text": "Leave", "next_id": "start" }
+    ]
+  }
+]

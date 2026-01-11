@@ -1,0 +1,13 @@
+id: TASK-1203-game-content-validate-bundle
+title: "Validate narrative content JSON + produce deterministic content bundle"
+pillar: game
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+outputs:
+  artifacts_dir: artifacts
+  evidence:
+    - artifacts/validation_report.json
+    - artifacts/content_bundle.zip

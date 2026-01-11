@@ -1,0 +1,10 @@
+{
+  "checked_file": "artifacts/site/index.html",
+  "hrefs": [
+    "#about",
+    "#evidence"
+  ],
+  "missing_anchors": [],
+  "status": "ok",
+  "taskpack_id": "TASK-1202-web-static-build-evidence"
+}

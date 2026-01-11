@@ -1,0 +1,5 @@
+must:
+  - python -m compileall -q tools
+  - python tools/lint_check.py
+  - python tools/build_site.py
+  - python tools/verify_links.py

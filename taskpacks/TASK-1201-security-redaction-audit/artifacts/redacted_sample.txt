@@ -1,0 +1,5 @@
+User: [REDACTED_EMAIL]
+Peer: [REDACTED_EMAIL]
+Host: [REDACTED_IPV4]
+Note: token=[REDACTED_TOKEN]
+Other: ok

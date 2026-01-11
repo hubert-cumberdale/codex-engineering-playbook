@@ -1,0 +1,11 @@
+{
+  "inputs": {
+    "content_md_sha256": "85b63ab8569a5e7459f0282b99c3b6f4cc1cb90e156d0bf7f7ea53a2df8cdb76",
+    "template_html_sha256": "7aa8cd98ec75a04b8384fd105d8966d9f5f93b8af9a0b37d2efabe592accf51e"
+  },
+  "outputs": {
+    "index_html_path": "artifacts/site/index.html",
+    "index_html_sha256": "d5ff762f84327584616d2c1e668876919110329a2b079a747a65ad1e2855de0c"
+  },
+  "taskpack_id": "TASK-1202-web-static-build-evidence"
+}
