@@ -18,37 +18,94 @@ def scan_taskpacks():
         if not tp.is_dir():
             continue
         if not (tp / "task.yml").exists():
-            continue  # ignore non-taskpack dirs
+            continue
 
-        # Required files
+        name = tp.name
+
+        # --- Required files ---
         for req in ("spec.md", "acceptance.yml", "risk.md", "runbook.md"):
             if not (tp / req).exists():
                 findings.append({
-                    "taskpack": tp.name,
+                    "taskpack": name,
                     "type": "missing_file",
                     "detail": req,
                 })
 
-        # Acceptance hygiene
+        # --- Acceptance hygiene ---
         acc = tp / "acceptance.yml"
-        if acc.exists():
-            text = acc.read_text(encoding="utf-8")
-            if "unittest" in text and not TEST_DISCOVER_RE.search(text):
-                findings.append({
-                    "taskpack": tp.name,
-                    "type": "acceptance_pattern",
-                    "detail": "unittest without explicit discover",
-                })
+        acc_text = acc.read_text(encoding="utf-8") if acc.exists() else ""
+        if "compileall" not in acc_text:
+            findings.append({
+                "taskpack": name,
+                "type": "acceptance_pattern",
+                "detail": "compileall missing from acceptance",
+            })
+        if "lint_check.py" not in acc_text:
+            findings.append({
+                "taskpack": name,
+                "type": "acceptance_pattern",
+                "detail": "lint_check missing from acceptance",
+            })
+        if "unittest" in acc_text and not TEST_DISCOVER_RE.search(acc_text):
+            findings.append({
+                "taskpack": name,
+                "type": "acceptance_pattern",
+                "detail": "unittest without explicit discover",
+            })
 
-        # Import footgun heuristic
+        # --- Import path footgun ---
         for tool in (tp / "tools").glob("*.py"):
             t = tool.read_text(encoding="utf-8")
             if "from src." in t and "sys.path.insert" not in t:
                 findings.append({
-                    "taskpack": tp.name,
+                    "taskpack": name,
                     "type": "import_path",
                     "detail": f"{tool.name} imports src without sys.path bootstrap",
                 })
+
+            # Artifact path hygiene
+            if ".write_text(" in t and "artifacts" not in t:
+                findings.append({
+                    "taskpack": name,
+                    "type": "artifact_path",
+                    "detail": f"{tool.name} may write files outside artifacts/",
+                })
+
+        # --- Manifest recommendation ---
+        art = tp / "artifacts"
+        if art.exists():
+            files = [p for p in art.iterdir() if p.is_file() and p.name != "README.md"]
+            if len(files) > 1 and not (art / "manifest.json").exists():
+                findings.append({
+                    "taskpack": name,
+                    "type": "manifest",
+                    "detail": "multiple artifacts without artifacts/manifest.json",
+                })
+
+        # --- Deploy / network language ---
+        for doc in ("spec.md", "runbook.md", "risk.md"):
+            p = tp / doc
+            if not p.exists():
+                continue
+            text = p.read_text(encoding="utf-8").lower()
+            for word in ("deploy", "deployment", "publish", "hosting", "release", "cloud"):
+                if word in text:
+                    findings.append({
+                        "taskpack": name,
+                        "type": "language",
+                        "detail": f"{doc} contains '{word}'",
+                    })
+
+        # --- Timestamp smell in JSON artifacts ---
+        for jf in art.glob("*.json") if art.exists() else []:
+            text = jf.read_text(encoding="utf-8").lower()
+            for k in TIMESTAMP_KEYS:
+                if f'"{k}"' in text:
+                    findings.append({
+                        "taskpack": name,
+                        "type": "determinism",
+                        "detail": f"{jf.name} contains timestamp-like key '{k}'",
+                    })
 
     return findings
 

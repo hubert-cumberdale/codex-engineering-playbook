@@ -106,13 +106,27 @@ python -m unittest discover -s tests -p "test_*.py" -q
 
 ---
 
-### P2.2 Multi-artifact manifest
+### P2.2 Multi-artifact manifest (recommended)
 
 **Pressure**
-- Packs producing many artifacts lack a single index.
+- Task Packs producing many artifacts lack a single index.
 
 **Pattern**
-- Optional artifacts/manifest.json
+`artifacts/manifest.json`:
+```json
+{
+  "taskpack_id": "...",
+  "artifacts": [
+    { "path": "artifacts/report.json", "sha256": "…" },
+    { "path": "artifacts/report.md", "sha256": "…" }
+  ],
+  "status": "ok"
+}
+```
+
+**Notes**
+- Information only
+- Hygiene scans may recommend this pattern
 
 **Done when**
 - Guidance exists; hygiene can recommend it
