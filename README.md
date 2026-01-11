@@ -69,3 +69,6 @@ python tools/orchestrator/orchestrate.py
 ```
 
 Artifacts live in `.orchestrator_logs/`
+
+### Task Pack Examples: 
+`docs/examples/TASKPACK_EXAMPLES.md`
