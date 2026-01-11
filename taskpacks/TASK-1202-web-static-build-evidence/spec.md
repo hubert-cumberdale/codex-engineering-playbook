@@ -34,3 +34,5 @@ Demonstrate a minimal “web build” workflow that:
   - [ ] `status` = `ok`
   - [ ] `missing_anchors` = `[]`
 - [ ] No deployment, hosting, or network behavior is implied or required
+
+> “This Task Pack is an example and should remain validator-clean.”

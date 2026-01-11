@@ -37,3 +37,5 @@ See `acceptance.yml` (command-based, local).
   - [ ] `[REDACTED_TOKEN]`
 - [ ] No raw secrets or real credentials appear in artifacts or source files
 - [ ] Task Pack runs in isolation with no network access
+
+> “This Task Pack is an example and should remain validator-clean.”

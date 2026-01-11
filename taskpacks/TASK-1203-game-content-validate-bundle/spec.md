@@ -35,3 +35,5 @@ See `acceptance.yml`.
   - [ ] Unique event IDs
   - [ ] Valid `next_id` references or `null`
 - [ ] No engine build, binary compilation, or deployment behavior is present
+
+> “This Task Pack is an example and should remain validator-clean.”
