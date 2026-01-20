@@ -13,7 +13,9 @@ lint:
 
 tests:
   commands:
-    - python -m pytest -q
+    # v1.2 hygiene (advisory): explicit import posture for local/CI parity
+    - PYTHONPATH=. python -m pytest -q
+    # v1.2 hygiene (advisory): artifacts should provide deterministic evidence    
     - python tools/acceptance/check_artifacts_present.py --path artifacts
     - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any deterministic headless validation batchmode export
     - python tools/acceptance/check_engine_declared_in_taskpack.py --task-yml task.yml --spec spec.md --artifact-path artifacts

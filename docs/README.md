@@ -52,6 +52,8 @@ Rules:
 - `/solutions/**`
 - `/.codex/skills/**`
 - Templates and examples
+- Pressure checklist: `docs/v1.2/PRESSURE_CHECKLIST.md`
+- Hygiene guidance (advisory): `docs/v1.2/HYGIENE_GUIDANCE.md`
 
 Includes:
 - Task Pack specs, runbooks, risks

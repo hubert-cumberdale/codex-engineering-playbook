@@ -26,8 +26,9 @@ If running locally:
 2. Run the documented headless or validation command.
 3. Observe logs or exported outputs.
 
-### CI (authoritative)
-The authoritative run occurs in GitHub Actions:
+### CI (reference execution)
+CI is a repeatable runner for the same command-based acceptance defined in `acceptance.yml`.
+
 
 - Orchestrator executes validation/build commands
 - Headless or scripted checks are run
@@ -37,14 +38,40 @@ Manual playtesting is not part of this process.
 
 ---
 
-## Expected outputs
+## Hygiene guidance (v1.2, advisory)
 
-Outputs may include:
-- Build or export artifacts
-- Validation logs
-- Structured output confirming behavior
+This section is **informational (Tier-2)** and does not change acceptance behavior.
 
-Artifacts must allow reviewers to assess correctness without running the game interactively.
+### Python import path rules (when applicable)
+- Prefer an explicit import posture for parity between local and CI execution.
+  - Example: `PYTHONPATH=. ...` or `PYTHONPATH=src ...`
+- Prefer module execution where applicable:
+  - `python -m package.module`
+
+### Explicit unittest discovery (when using unittest)
+If this task pack uses `unittest`, use explicit discovery:
+- `PYTHONPATH=. python -m unittest discover -s tests -p "test_*.py" -v`
+
+### Deterministic artifact rules
+- Write evidence to stable paths under `artifacts/`.
+- Filenames must be deterministic; avoid timestamps in filenames.
+- If timestamps are useful, include them inside artifact content.
+
+---
+
+## Expected Outputs (Review Surface)
+
+Primary evidence:
+- `artifacts/<taskpack-id>/` (exports, logs, or validation outputs)
+
+Optional supporting artifacts:
+- `artifacts/<taskpack-id>/manifest.json` (recommended if multiple artifacts exist)
+
+If expected snapshots are used:
+- `expected/report.md`
+
+Artifacts must allow reviewers to evaluate success **without executing the task pack**.
+Prefer deterministic filenames and stable structure.
 
 ---
 

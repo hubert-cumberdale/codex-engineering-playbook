@@ -26,8 +26,8 @@ If running locally:
 2. Run the build and/or test commands defined in the task.
 3. Confirm outputs match expectations.
 
-### CI (authoritative)
-The authoritative run occurs in GitHub Actions:
+### CI (reference execution)
+CI is a repeatable runner for the same command-based acceptance defined in `acceptance.yml`.
 
 - Orchestrator executes the task
 - Build/test commands run
@@ -36,14 +36,44 @@ The authoritative run occurs in GitHub Actions:
 
 ---
 
+## Hygiene guidance (v1.2, advisory)
+
+This section is **informational (Tier-2)** and does not change acceptance behavior.
+
+### Python import path rules (when applicable)
+- Prefer an explicit import posture for parity between local and CI execution.
+  - Example: `PYTHONPATH=. ...` or `PYTHONPATH=src ...`
+- Prefer module execution where applicable:
+  - `python -m package.module`
+
+### Explicit unittest discovery (when using unittest)
+If this task pack uses `unittest`, use explicit discovery:
+- `PYTHONPATH=. python -m unittest discover -s tests -p "test_*.py" -v`
+
+### Deterministic artifact rules
+- Write evidence to stable paths under `artifacts/`.
+- Filenames must be deterministic; avoid timestamps in filenames.
+- If timestamps are useful, include them inside artifact content.
+
+---
+
 ## Expected outputs
 
-Depending on the task, outputs may include:
-- Build artifacts (`dist/`, `build/`)
-- Test results or coverage reports
-- Updated source or test files
+### Expected Outputs (Review Surface)
 
-Artifacts are optional unless required by acceptance.
+Primary evidence (if produced):
+- `artifacts/<taskpack-id>/build/`
+- `artifacts/<taskpack-id>/report.md`
+
+Optional supporting artifacts:
+- `artifacts/<taskpack-id>/results.json`
+- `artifacts/<taskpack-id>/manifest.json` (recommended if multiple artifacts exist)
+
+If expected snapshots are used:
+- `expected/report.md`
+
+Artifacts must allow reviewers to evaluate success **without executing the task pack**.
+Prefer deterministic filenames and stable structure.
 
 ---
 

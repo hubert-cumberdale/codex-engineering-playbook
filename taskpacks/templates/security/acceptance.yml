@@ -10,7 +10,9 @@ lint:
   commands:
     - python tools/acceptance/check_git_diff_scope.py --allowed taskpacks/
 tests:
-  commands:
-    - python -m pytest -q
+  commands: 
+    # v1.2 hygiene (advisory): prefer an explicit import posture for local/CI parity.
+    - PYTHONPATH=src python -m pytest -q
+    # v1.2 hygiene (advisory): artifacts are the primary review surface; keep outputs deterministic.
     - python tools/acceptance/check_artifacts_present.py --path artifacts
     - python tools/acceptance/check_artifact_contains_any.py --path artifacts --any finding result status pass fail
