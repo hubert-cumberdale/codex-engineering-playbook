@@ -35,6 +35,7 @@ class ExtractionResult:
     detection_strategies: tuple[StixObject, ...] = field(default_factory=tuple)
     analytics: tuple[StixObject, ...] = field(default_factory=tuple)
     relationships: tuple[Relationship, ...] = field(default_factory=tuple)
+    techniques: tuple[StixObject, ...] = field(default_factory=tuple)
 
     # Explicit technique ids only if present via relationships/refs in the bundle
     explicit_technique_external_ids: tuple[str, ...] = field(default_factory=tuple)

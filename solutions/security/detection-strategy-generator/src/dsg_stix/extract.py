@@ -24,6 +24,7 @@ def extract_stage1(
 
     ds = tuple(o for o in objects if o.type in detection_strategy_types)
     an = tuple(o for o in objects if o.type in analytic_types)
+    techniques = tuple(o for o in objects if o.type in TECHNIQUE_TYPES)
 
     # Explicit technique external ids: only from technique objects present in the bundle.
     # We DO NOT infer from names, descriptions, or external refs on other objects.
@@ -42,5 +43,6 @@ def extract_stage1(
         detection_strategies=tuple(sorted(ds, key=lambda x: x.id)),
         analytics=tuple(sorted(an, key=lambda x: x.id)),
         relationships=tuple(rels),
+        techniques=tuple(sorted(techniques, key=lambda x: x.id)),
         explicit_technique_external_ids=tuple(sorted(technique_external_ids)),
     )
