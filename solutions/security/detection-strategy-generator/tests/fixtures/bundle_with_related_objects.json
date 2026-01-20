@@ -1,0 +1,185 @@
+{
+  "type": "bundle",
+  "id": "bundle--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+  "spec_version": "2.1",
+  "objects": [
+    {
+      "type": "x-mitre-detection-strategy",
+      "id": "x-mitre-detection-strategy--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+      "name": "Strategy With Related Objects",
+      "description": "Explicit detection strategy description",
+      "x_mitre_platforms": ["Windows"],
+      "x_mitre_domains": ["enterprise-attack"],
+      "x_mitre_analytic_refs": [
+        "x-mitre-analytic--bbbbbbbb-bbbb-4000-8000-bbbbbbbbbbbb",
+        "x-mitre-analytic--99999999-9999-4000-8000-999999999999"
+      ]
+    },
+    {
+      "type": "x-mitre-analytic",
+      "id": "x-mitre-analytic--bbbbbbbb-bbbb-4000-8000-bbbbbbbbbbbb",
+      "name": "Analytic Alpha",
+      "description": "Explicit analytic description",
+      "x_mitre_platforms": ["Windows"],
+      "x_mitre_data_sources": ["Process monitoring"],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "AN0001",
+          "url": "https://example.com/analytics/AN0001"
+        }
+      ]
+    },
+    {
+      "type": "x-mitre-data-source",
+      "id": "x-mitre-data-source--cccccccc-cccc-4000-8000-cccccccccccc",
+      "name": "Process",
+      "description": "Process telemetry",
+      "x_mitre_platforms": ["Windows"],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "DS0001",
+          "url": "https://example.com/datasources/DS0001"
+        }
+      ]
+    },
+    {
+      "type": "x-mitre-data-source",
+      "id": "x-mitre-data-source--12121212-1212-4000-8000-121212121212",
+      "name": "Ignored Source",
+      "description": "Should be ignored by allowlist",
+      "x_mitre_platforms": ["Windows"],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "DS9999",
+          "url": "https://example.com/datasources/DS9999"
+        }
+      ]
+    },
+    {
+      "type": "x-mitre-data-component",
+      "id": "x-mitre-data-component--dddddddd-dddd-4000-8000-dddddddddddd",
+      "name": "Process Creation",
+      "description": "Process start events",
+      "x_mitre_data_source_ref": "x-mitre-data-source--cccccccc-cccc-4000-8000-cccccccccccc",
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "DC0001",
+          "url": "https://example.com/datacomponents/DC0001"
+        }
+      ]
+    },
+    {
+      "type": "course-of-action",
+      "id": "course-of-action--eeeeeeee-eeee-4000-8000-eeeeeeeeeeee",
+      "name": "Mitigation Example",
+      "description": "Mitigation details",
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "M0001",
+          "url": "https://example.com/mitigations/M0001"
+        }
+      ]
+    },
+    {
+      "type": "tool",
+      "id": "tool--ffffffff-ffff-4000-8000-ffffffffffff",
+      "name": "Tool Example",
+      "description": "Tool details",
+      "x_mitre_platforms": ["Windows"],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "S0001",
+          "url": "https://example.com/software/S0001"
+        }
+      ]
+    },
+    {
+      "type": "malware",
+      "id": "malware--11111111-aaaa-4000-8000-111111111111",
+      "name": "Malware Example",
+      "description": "Malware details",
+      "x_mitre_platforms": ["Windows"],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "S0002",
+          "url": "https://example.com/software/S0002"
+        }
+      ]
+    },
+    {
+      "type": "attack-pattern",
+      "id": "attack-pattern--22222222-bbbb-4000-8000-222222222222",
+      "name": "Sample Technique",
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "T0001",
+          "url": "https://example.com/techniques/T0001"
+        }
+      ]
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--33333333-3333-4000-8000-333333333333",
+      "relationship_type": "includes",
+      "source_ref": "x-mitre-detection-strategy--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+      "target_ref": "x-mitre-analytic--bbbbbbbb-bbbb-4000-8000-bbbbbbbbbbbb"
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--44444444-4444-4000-8000-444444444444",
+      "relationship_type": "detects",
+      "source_ref": "x-mitre-detection-strategy--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+      "target_ref": "attack-pattern--22222222-bbbb-4000-8000-222222222222"
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--55555555-5555-4000-8000-555555555555",
+      "relationship_type": "related-to",
+      "source_ref": "x-mitre-analytic--bbbbbbbb-bbbb-4000-8000-bbbbbbbbbbbb",
+      "target_ref": "x-mitre-data-source--cccccccc-cccc-4000-8000-cccccccccccc"
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--abababab-abab-4000-8000-abababababab",
+      "relationship_type": "unknown-rel",
+      "source_ref": "x-mitre-detection-strategy--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+      "target_ref": "x-mitre-data-source--12121212-1212-4000-8000-121212121212"
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--66666666-6666-4000-8000-666666666666",
+      "relationship_type": "related-to",
+      "source_ref": "x-mitre-analytic--bbbbbbbb-bbbb-4000-8000-bbbbbbbbbbbb",
+      "target_ref": "x-mitre-data-component--dddddddd-dddd-4000-8000-dddddddddddd"
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--77777777-7777-4000-8000-777777777777",
+      "relationship_type": "related-to",
+      "source_ref": "x-mitre-detection-strategy--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+      "target_ref": "course-of-action--eeeeeeee-eeee-4000-8000-eeeeeeeeeeee"
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--88888888-8888-4000-8000-888888888888",
+      "relationship_type": "uses",
+      "source_ref": "x-mitre-detection-strategy--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+      "target_ref": "tool--ffffffff-ffff-4000-8000-ffffffffffff"
+    },
+    {
+      "type": "relationship",
+      "id": "relationship--99999999-9999-4000-8000-999999999999",
+      "relationship_type": "uses",
+      "source_ref": "x-mitre-detection-strategy--aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa",
+      "target_ref": "malware--11111111-aaaa-4000-8000-111111111111"
+    }
+  ]
+}

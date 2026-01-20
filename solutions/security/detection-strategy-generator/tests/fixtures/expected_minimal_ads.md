@@ -14,6 +14,13 @@ Not provided by source
 - Platforms: Not provided by source
 - Data Sources: Not provided by source
 - Analytics: Example Analytic
+- Analytic: Example Analytic
+- Analytic External IDs: Not provided by source
+- Analytic STIX ID: x-mitre-analytic--22222222-2222-4000-8000-222222222222
+- Analytic Platforms: Not provided by source
+- Analytic Description: Not provided by source
+- Analytic Log Source References: Not provided by source
+- Analytic Mutable Elements: Not provided by source
 ## Blind Spots and Assumptions
 Not provided by source
 ## False Positives

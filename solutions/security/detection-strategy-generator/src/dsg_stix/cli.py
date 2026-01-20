@@ -8,6 +8,7 @@ from dataclasses import asdict
 
 from .io import load_bundle_bytes, bundle_meta
 from .extract import extract_stage1
+from .profile import load_profile
 from .records import build_records
 from .render import RenderConfig, render_detection_strategy, UNKNOWN
 
@@ -25,6 +26,7 @@ def main(argv: list[str] | None = None) -> int:
     rnd.add_argument("--bundle", required=True, type=Path)
     rnd.add_argument("--output-dir", required=True, type=Path)
     rnd.add_argument("--timestamp", required=True, help="ISO-8601 timestamp for determinism.")
+    rnd.add_argument("--profile", type=Path, help="Optional JSON profile overlay.")
     rnd.add_argument("--company-profile-id", default=UNKNOWN)
     rnd.add_argument("--company-profile-hash", default=UNKNOWN)
 
@@ -40,6 +42,10 @@ def main(argv: list[str] | None = None) -> int:
             "domain": result.domain,
             "detection_strategies": [o.raw for o in result.detection_strategies],
             "analytics": [o.raw for o in result.analytics],
+            "data_sources": [o.raw for o in result.data_sources],
+            "data_components": [o.raw for o in result.data_components],
+            "mitigations": [o.raw for o in result.mitigations],
+            "software": [o.raw for o in result.software],
             "relationships": [r.raw for r in result.relationships],
             "explicit_technique_external_ids": list(result.explicit_technique_external_ids),
         }
@@ -54,10 +60,14 @@ def main(argv: list[str] | None = None) -> int:
         meta = bundle_meta(bundle_bytes, bundle_obj)
         result = extract_stage1(bundle_obj=bundle_obj, meta=meta, domain=args.domain)
         records = build_records(result)
+        profile = load_profile(args.profile) if args.profile else None
+        profile_id = profile.profile_id if profile else args.company_profile_id
+        profile_hash = profile.profile_hash if profile else args.company_profile_hash
         config = RenderConfig(
             render_timestamp=args.timestamp,
-            company_profile_id=args.company_profile_id,
-            company_profile_hash=args.company_profile_hash,
+            company_profile_id=profile_id,
+            company_profile_hash=profile_hash,
+            profile=profile,
         )
 
         output_root = Path(args.output_dir) / args.domain
