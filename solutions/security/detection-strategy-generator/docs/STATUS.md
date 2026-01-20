@@ -5,9 +5,9 @@ This document tracks maturity and scope.
 ---
 
 ## Current Stage
-**Stage 0 — Contract + Governance Locked** ✅
+**Stage 2 — ADS Markdown Rendering (MITRE-only)** ✅
 
-No production code exists yet. This stage defines the invariants that all future work must satisfy.
+Stages 0–2 are complete (contract/governance, STIX extraction, deterministic ADS rendering).
 
 ---
 
@@ -20,7 +20,7 @@ No production code exists yet. This stage defines the invariants that all future
 - Unit tests with minimal fixtures
 
 ### Stage 2 — ADS Markdown Rendering (MITRE-only)
-- Jinja templates for 10-section ADS doc
+- Deterministic 10-section ADS doc renderer
 - Golden file tests
 - Required-section enforcement
 - Provenance block enforcement
