@@ -1,0 +1,19 @@
+id: "TASK-REVIEW-0002"
+title: "Advisory pre-push review hook"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Hook installer installs tools/review/hooks/pre-push into .git/hooks"
+    - "Hook runs deterministic review runner in advisory mode"
+    - "Strict mode can block on objective violations"
+
+skills:
+  prefer:
+    - "python-cli-standard"

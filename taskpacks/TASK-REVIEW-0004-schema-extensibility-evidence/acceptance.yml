@@ -1,0 +1,8 @@
+version: 1
+
+deps: []
+
+tests:
+  commands:
+    - "PYTHONPATH=. python -m pytest -q"
+    - "PYTHONPATH=. python -m tools.review.run_review --mode advisory --report-path /tmp/review_report.json"

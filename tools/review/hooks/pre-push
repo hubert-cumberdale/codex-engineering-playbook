@@ -1,0 +1,21 @@
+#!/bin/sh
+# codex-review-hook
+set -u
+
+REPORT_PATH=".git/hooks/review-report.json"
+
+python -m tools.review.run_review --mode advisory --report-path "$REPORT_PATH"
+status=$?
+
+if [ "${CODEX_REVIEW_STRICT:-}" = "1" ] && [ "$status" -eq 2 ]; then
+  echo "codex review: strict mode enabled; blocking push due to objective violations"
+  exit 2
+fi
+
+if [ "$status" -eq 2 ]; then
+  echo "codex review: advisory mode; violations present but push allowed"
+elif [ "$status" -ne 0 ]; then
+  echo "codex review: advisory mode; runner error (push allowed)"
+fi
+
+exit 0

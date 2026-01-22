@@ -1,0 +1,21 @@
+id: "TASK-REVIEW-0004"
+title: "Review schema hardening, extensibility docs, and evidence collection"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Review report JSON includes schema header fields and stable violation ordering"
+    - "Tests cover schema header fields, violation fields, and deterministic ordering"
+    - "Tier-2 docs explain deterministic review extension contract"
+    - "GOVERNANCE.md points to extension doc and states schema version"
+    - "Orchestrator collects review report only when opt-in is enabled"
+
+skills:
+  prefer:
+    - "python-cli-standard"
