@@ -86,6 +86,28 @@ If a change does not fit this flow, it is rejected.
 
 ---
 
+## Deterministic Review System
+
+Purpose:
+- Provide deterministic, repo-wide checks that enforce objective requirements for Tier 1 documentation, release notes presence, and Task Pack required files.
+
+Scope of checks:
+- Presence of Tier 1 documents and release notes artifacts.
+- Presence of required Task Pack files (task.yml, spec.md, acceptance.yml, risk.md, runbook.md).
+- No content analysis, heuristic inference, or AI/LLM usage.
+
+Enforcement model:
+- Local usage is advisory by default via the pre-push hook; strict mode is opt-in for local runs.
+- CI runs the same runner in strict mode and blocks only on objective violations (exit code 2).
+- Runner errors return exit code 1 and fail CI as execution errors, not as violations.
+
+Source of truth:
+- The JSON report produced by `tools/review/run_review.py` via `--report-path` is the authoritative record.
+- Review report schema version: 1.
+- Extension guidance: `docs/review/DETERMINISTIC_REVIEW.md`.
+
+---
+
 ## Safety Veto
 
 Any contributor may veto a change if it:

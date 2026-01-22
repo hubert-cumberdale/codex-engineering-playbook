@@ -39,34 +39,84 @@ def test_report_schema_stability(tmp_path: Path) -> None:
     report_text = run_review.serialize_report(report)
 
     assert list(report.keys()) == [
-        "mode",
-        "root",
         "schema_version",
+        "generated_at",
+        "tool",
+        "mode",
         "summary",
+        "root",
         "violations",
     ]
-    assert list(report["summary"].keys()) == ["checks_run", "violations"]
+    assert list(report["summary"].keys()) == ["checks", "violations", "status"]
 
     assert_sorted_keys(
         report_text,
-        ["mode", "root", "schema_version", "summary", "violations"],
+        ["generated_at", "mode", "root", "schema_version", "summary", "tool", "violations"],
     )
 
-    violation_keys = ["check_id", "message", "path"]
+    assert report["schema_version"] == 1
+    assert report["tool"]["name"] == "tools.review.run_review"
+    assert report["tool"]["version"] == "unknown"
+    assert report["summary"]["checks"] == len(run_review.CHECKS)
+    assert report["summary"]["violations"] == 2
+    assert report["summary"]["status"] == "fail"
+    assert report["generated_at"].endswith("Z")
+    dt = run_review.dt.datetime.fromisoformat(report["generated_at"].replace("Z", "+00:00"))
+    assert dt.tzinfo is not None
+
     for violation in report["violations"]:
-        assert list(violation.keys()) == violation_keys
+        assert set(violation.keys()) == {"id", "category", "severity", "message", "path"}
 
     assert report["violations"] == [
         {
-            "check_id": run_review.CHECK_ID_TIER1,
+            "id": run_review.RULE_DOCS_TIER1_MISSING,
+            "category": run_review.CATEGORY_DOCS,
+            "severity": "error",
             "message": "missing required Tier 1 document",
             "path": missing_tier1,
         },
         {
-            "check_id": run_review.CHECK_ID_TASKPACK,
+            "id": run_review.RULE_TASKPACK_FILE_MISSING,
+            "category": run_review.CATEGORY_TASKPACK,
+            "severity": "error",
             "message": "missing required taskpack file",
             "path": missing_taskpack,
         },
+    ]
+
+
+def test_violation_sorting_is_deterministic() -> None:
+    violations = [
+        run_review.build_violation(
+            "B_RULE",
+            category=run_review.CATEGORY_DOCS,
+            severity="error",
+            message="b-message",
+            path="b/path.txt",
+        ),
+        run_review.build_violation(
+            "A_RULE",
+            category=run_review.CATEGORY_DOCS,
+            severity="error",
+            message="z-message",
+            path="b/path.txt",
+        ),
+        run_review.build_violation(
+            "A_RULE",
+            category=run_review.CATEGORY_DOCS,
+            severity="error",
+            message="a-message",
+            path="a/path.txt",
+        ),
+    ]
+
+    sorted_violations = run_review.sort_violations(violations)
+    assert [v["id"] for v in sorted_violations] == ["A_RULE", "A_RULE", "B_RULE"]
+    assert [v["path"] for v in sorted_violations] == ["a/path.txt", "b/path.txt", "b/path.txt"]
+    assert [v["message"] for v in sorted_violations] == [
+        "a-message",
+        "z-message",
+        "b-message",
     ]
 
 
@@ -79,6 +129,7 @@ def test_positive_case(tmp_path: Path) -> None:
 
     report = json.loads(report_path.read_text(encoding="utf-8"))
     assert report["summary"]["violations"] == 0
+    assert report["summary"]["status"] == "pass"
     assert report["violations"] == []
 
 
@@ -93,9 +144,12 @@ def test_negative_case_missing_taskpack_file(tmp_path: Path) -> None:
 
     report = json.loads(report_path.read_text(encoding="utf-8"))
     assert report["summary"]["violations"] == 1
+    assert report["summary"]["status"] == "fail"
     assert report["violations"] == [
         {
-            "check_id": run_review.CHECK_ID_TASKPACK,
+            "id": run_review.RULE_TASKPACK_FILE_MISSING,
+            "category": run_review.CATEGORY_TASKPACK,
+            "severity": "error",
             "message": "missing required taskpack file",
             "path": "taskpacks/TASK-EXAMPLE/acceptance.yml",
         }

@@ -118,6 +118,32 @@ def _env_truthy(name: str) -> bool:
 def _write_manifest(path: pathlib.Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
+def _collect_review_report(manifest: dict, *, manifest_path: pathlib.Path) -> None:
+    report_path = LOG_DIR / "review_report.json"
+    cmd = (
+        f"{shlex.quote(sys.executable)} -m tools.review.run_review "
+        f"--mode advisory --report-path {shlex.quote(str(report_path))}"
+    )
+    proc = run(cmd, check=False)
+
+    if proc.returncode == 0:
+        status = "pass"
+    elif proc.returncode == 2:
+        status = "violations"
+    else:
+        status = "error"
+
+    if report_path.exists():
+        manifest["review_report_path"] = str(report_path.relative_to(ROOT))
+        manifest["review_schema_version"] = 1
+        manifest["review_status"] = status
+    else:
+        manifest["review_status"] = "error"
+        manifest["review_error"] = "review_report_missing"
+
+    _write_manifest(manifest_path, manifest)
+    print(f"[review] collected status={status} report={report_path}")
+
 def _make_execution_context(tp: TaskPack, *, artifact_dir: pathlib.Path) -> ExecutionContext:
     run_id = f"{tp.id.lower()}-{int(time.time())}"
 
@@ -415,6 +441,7 @@ def main() -> None:
     args = parse_args(sys.argv[1:])
     enable_plugins = args.enable_plugins or _env_truthy("ORCH_ENABLE_PLUGINS")
     plugins_strict = args.plugins_strict or _env_truthy("ORCH_PLUGINS_STRICT")
+    collect_review = _env_truthy("ORCH_COLLECT_REVIEW")
 
     manifest_path = LOG_DIR / "manifest.json"
     if not manifest_path.exists():
@@ -508,6 +535,9 @@ def main() -> None:
     # Run acceptance checks (ground truth)
     run_acceptance(tp)
     git_commit(f"test: acceptance checks pass for {tp.id}")
+
+    if collect_review:
+        _collect_review_report(manifest, manifest_path=manifest_path)
 
     # Push branch and open PR
     ensure_https_remote_for_ci()

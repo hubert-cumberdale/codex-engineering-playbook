@@ -1,0 +1,20 @@
+id: "TASK-REVIEW-0003"
+title: "CI review runner integration and governance documentation"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "CI workflow runs deterministic review runner in strict mode"
+    - "CI blocks only on objective violations (exit code 2)"
+    - "Review report JSON artifact is uploaded on pass and fail"
+    - "GOVERNANCE.md documents the deterministic review system"
+
+skills:
+  prefer:
+    - "python-cli-standard"
