@@ -1,3 +1,8 @@
+---
+name: web-build-artifact-evidence
+description: Define an evidence-first pattern for web Task Packs that claim a build (or packaging) contract.
+---
+
 # Skill: web-build-artifact-evidence
 
 ## Purpose
