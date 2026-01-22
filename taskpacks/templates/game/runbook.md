@@ -34,7 +34,7 @@ CI is a repeatable runner for the same command-based acceptance defined in `acce
 - Headless or scripted checks are run
 - Logs and artifacts are collected
 
-Manual playtesting is not part of this process.
+Manual QA sessions are not part of this process.
 
 ---
 
@@ -80,11 +80,11 @@ Prefer deterministic filenames and stable structure.
 Acceptance is defined in `acceptance.yml` and typically includes:
 - Successful headless build or validation
 - Explicit engine/version declaration
-- No reliance on subjective criteria
+- No reliance on non-deterministic criteria
 
 A task **fails** if:
 - Validation cannot run deterministically
-- Acceptance depends on manual playtesting
+- Acceptance depends on manual QA sessions
 - Engine/version is ambiguous or implicit
 
 ---
@@ -107,4 +107,4 @@ Reviewers should verify:
 - Scope is architectural or systemic, not experiential
 - Artifacts are sufficient to evaluate success
 
-If success is defined by “feel,” “fun,” or aesthetics, move the work outside this system.
+If success depends on human taste or aesthetics, move the work outside this system.
