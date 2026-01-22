@@ -1,0 +1,52 @@
+{
+  "type": "bundle",
+  "id": "bundle--bbbbbbbb-bbbb-4000-8000-bbbbbbbbbbbb",
+  "spec_version": "2.1",
+  "objects": [
+    {
+      "type": "x-mitre-detection-strategy",
+      "id": "x-mitre-detection-strategy--abababab-abab-4000-8000-abababababab",
+      "name": "Strategy With Analytic Refs",
+      "description": "Not provided by source",
+      "x_mitre_analytic_refs": [
+        "x-mitre-analytic--cdcdcdcd-cdcd-4000-8000-cdcdcdcdcdcd"
+      ]
+    },
+    {
+      "type": "x-mitre-analytic",
+      "id": "x-mitre-analytic--cdcdcdcd-cdcd-4000-8000-cdcdcdcdcdcd",
+      "name": "Analytic With Log Sources",
+      "description": "Analytic description body",
+      "x_mitre_platforms": ["Linux", "Windows"],
+      "x_mitre_log_source_references": [
+        {
+          "x_mitre_data_component_ref": "x-mitre-data-component--efefefef-efef-4000-8000-efefefefefef",
+          "name": "auditd:SYSCALL",
+          "channel": "socket/connect"
+        },
+        {
+          "x_mitre_data_component_ref": "x-mitre-data-component--abababab-efef-4000-8000-efefefefefee",
+          "name": "linux:syslog",
+          "channel": "Query to suspicious domain"
+        }
+      ],
+      "x_mitre_mutable_elements": [
+        {
+          "field": "DomainReputationFeed",
+          "description": "Whitelist tuned via intel"
+        },
+        {
+          "field": "ProcessWhitelist",
+          "description": "Known safe daemons"
+        }
+      ],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "AN0002",
+          "url": "https://example.com/analytics/AN0002"
+        }
+      ]
+    }
+  ]
+}

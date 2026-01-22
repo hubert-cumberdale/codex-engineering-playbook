@@ -1,3 +1,8 @@
+---
+name: web-acceptance-contracts
+description: Provide a repeatable pattern for writing command-based acceptance for web Task Packs.
+---
+
 # Skill: web-acceptance-contracts
 
 ## Purpose
