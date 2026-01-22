@@ -1,0 +1,19 @@
+id: "TASK-REVIEW-0001"
+title: "Deterministic review runner"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Deterministic review runner exists at tools/review/run_review.py"
+    - "Runner emits a deterministic JSON report with stable key ordering"
+    - "Required Tier 1 docs and taskpack structure checks are enforced"
+
+skills:
+  prefer:
+    - "python-cli-standard"
