@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -37,8 +38,18 @@ def test_install_hook_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 
 
 def run_hook(tmp_path: Path, strict: bool) -> subprocess.CompletedProcess[str]:
+    bin_dir = tmp_path / ".bin"
+    bin_dir.mkdir(exist_ok=True)
+    shim_path = bin_dir / "python"
+    shim_path.write_text(
+        f"#!/bin/sh\nexec {sys.executable} \"$@\"\n",
+        encoding="utf-8",
+    )
+    shim_path.chmod(0o755)
+
+    python_dir = str(bin_dir.resolve())
     env = {
-        "PATH": "/usr/bin:/bin",
+        "PATH": f"{python_dir}:/usr/bin:/bin",
         "PYTHONPATH": str(Path(__file__).resolve().parents[3]),
     }
     if strict:
