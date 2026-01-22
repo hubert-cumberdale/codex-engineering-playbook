@@ -212,9 +212,9 @@ def check_tests(mode: str) -> tuple[list[str], bool]:
     env["PYTHONPATH"] = "." + os.pathsep + env.get("PYTHONPATH", "")
 
     if mode == "fast":
-        cmd = ["pytest", "-q", "tests/test_taskpack_canaries.py"]
+        cmd = [sys.executable, "-m", "pytest", "-q", "tests/test_taskpack_canaries.py"]
     else:
-        cmd = ["pytest", "-q"]
+        cmd = [sys.executable, "-m", "pytest", "-q"]
 
     code, output = run_cmd(cmd, env=env)
     label = " ".join(cmd)
