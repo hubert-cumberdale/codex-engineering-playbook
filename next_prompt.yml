@@ -1,0 +1,29 @@
+# title: "Next task title"
+# mode: codex
+# scope:
+#   allowed_paths:
+#     - "/docs"
+# constraints:
+#   - "Doc-only changes"
+#   - "No CI enforcement"
+# acceptance:
+#   commands:
+#     - "rg -n \"Agent Model\" AGENTS.md"
+# prompt: |
+#   ## TASK X-01 — Title
+#   
+#   ### Purpose
+#   Describe the objective.
+#   
+#   ### Scope
+#   Docs only.
+#   
+#   ### Hard Constraints
+#   - No code changes
+#   - No orchestration changes
+#   
+#   ### Deliverables
+#   - List required files
+#   
+#   ### Acceptance Criteria
+#   - Bullet list of checks
