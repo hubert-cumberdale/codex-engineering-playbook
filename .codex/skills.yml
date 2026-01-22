@@ -1,0 +1,76 @@
+skills:
+  repo_review:
+    prompt: .codex/library/repo-review.md
+    authority: advisory
+    modifies_code: false
+    outputs:
+      - findings
+      - next_prompt
+
+  repo_hygiene:
+    prompt: .codex/library/repo-hygiene.md
+    authority: advisory
+    modifies_code: true
+    allowed_paths:
+      - "/"
+    outputs:
+      - diffs
+      - validation
+
+  governance_enforcement:
+    prompt: .codex/library/governance-enforcement.md
+    authority: blocking
+    modifies_code: true
+    allowed_paths:
+      - "/"
+    outputs:
+      - diffs
+      - validation
+
+  ci_workflow:
+    prompt: .codex/library/ci-workflow.md
+    authority: blocking
+    modifies_code: true
+    allowed_paths:
+      - "/.github"
+    outputs:
+      - diffs
+      - validation
+
+  documentation_contract:
+    prompt: .codex/library/documentation-contract.md
+    authority: blocking
+    modifies_code: true
+    allowed_paths:
+      - "/docs"
+    outputs:
+      - diffs
+      - validation
+
+  taskpack_scaffold:
+    prompt: .codex/library/taskpack-scaffolding.md
+    authority: advisory
+    modifies_code: true
+    allowed_paths:
+      - "/taskpacks"
+    outputs:
+      - diffs
+      - validation
+
+  release_prep:
+    prompt: .codex/library/release-prep.md
+    authority: blocking
+    modifies_code: true
+    allowed_paths:
+      - "/docs"
+      - "/docs/releases"
+    outputs:
+      - diffs
+      - validation
+
+  investigation:
+    prompt: .codex/library/investigation.md
+    authority: advisory
+    modifies_code: false
+    outputs:
+      - findings
