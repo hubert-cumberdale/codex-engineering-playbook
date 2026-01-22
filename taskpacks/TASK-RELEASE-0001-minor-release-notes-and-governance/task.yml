@@ -1,0 +1,21 @@
+id: "TASK-RELEASE-0001"
+title: "Minor release notes and governance review for deterministic review system"
+owner: "platform"
+priority: "P2"
+type: "docs"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Release notes exist for the next minor version"
+    - "GOVERNANCE.md remains Tier-1 contract-safe and accurate"
+    - "Skills/workflow docs reference the deterministic review system"
+    - "PYTHONPATH=. python -m pytest -q"
+
+skills:
+  prefer:
+    - "release_prep"
+    - "documentation_contract"
