@@ -21,7 +21,12 @@ def find_repo_root(start: Path) -> Path:
 def read_template(template_path: Path) -> str:
     content = template_path.read_text(encoding="utf-8")
     if INSTALL_MARKER not in content:
-        content = f"{INSTALL_MARKER}\n{content}"
+        lines = content.splitlines()
+        if lines and lines[0].startswith("#!"):
+            lines.insert(1, INSTALL_MARKER)
+            content = "\n".join(lines) + "\n"
+        else:
+            content = f"{INSTALL_MARKER}\n{content}"
     return content
 
 

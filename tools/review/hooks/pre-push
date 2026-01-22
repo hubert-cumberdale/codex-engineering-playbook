@@ -1,4 +1,5 @@
 #!/bin/sh
+# codex-review-hook
 set -u
 
 REPORT_PATH=".git/hooks/review-report.json"
