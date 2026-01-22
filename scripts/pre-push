@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${SKIP_REVIEW_CHECKS:-}" == "1" ]]; then
+  echo "[review-checks] SKIP_REVIEW_CHECKS=1 set; skipping review checks."
+  exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+if [[ -z "$repo_root" ]]; then
+  echo "[review-checks] Unable to locate git repository root."
+  exit 2
+fi
+
+cd "$repo_root"
+
+echo "[review-checks] Running: python tools/review/run_review_checks.py --fast"
+python tools/review/run_review_checks.py --fast
+status=$?
+
+if [[ $status -ne 0 ]]; then
+  echo "[review-checks] Push blocked: review checks failed."
+  echo "[review-checks] Bypass (discouraged): SKIP_REVIEW_CHECKS=1 git push"
+  echo "[review-checks] Or use: git push --no-verify"
+fi
+
+exit $status

@@ -25,7 +25,7 @@ Do not use this skill to:
 - add deployment steps,
 - require external services by default,
 - introduce network access unless explicitly allowed by task constraints,
-- describe acceptance in qualitative language (“looks good”, “fast”, “clean UI”).
+- describe acceptance in qualitative language.
 
 ## Inputs and assumptions
 Typical assumptions for web repos (adapt to the project):

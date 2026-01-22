@@ -1,0 +1,31 @@
+name: review-checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  review-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+      - name: Run review checks
+        run: |
+          python tools/review/run_review_checks.py --full --report-file .review/review_checks_report.txt
+      - name: Upload review report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-checks-report
+          path: .review/review_checks_report.txt
