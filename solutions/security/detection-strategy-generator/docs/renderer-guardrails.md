@@ -1,0 +1,5 @@
+- Exactly 10 sections (non-negotiable)
+- Explicit unknowns required
+- No analytic aggregation at strategy scope
+- No renderer sorting
+- Tests must assert presence + absence
