@@ -52,11 +52,19 @@ These skills describe how to work _within_ the system safely and correctly.
 - `orch-validator-expectations`  
     Understanding scope, artifact, and evidence enforcement.
     
+- `orch-deterministic-review-runner`  
+    Running and interpreting the deterministic, offline review runner output.
+    
+- `orch-review-report-schema`  
+    Understanding the versioned review report schema and required fields.
+    
 - `orch-plugin-authoring` _(optional)_  
     Writing solution plugins that remain gated, stateless, and contract-subordinate.
     
 - `orch-pr-hygiene-and-release-notes`  
     Branching, commits, PR structure, and evidence attachment.
+
+These review skills are non-AI, offline, and deterministic; they do not include heuristic or semantic analysis.
     
 
 ---

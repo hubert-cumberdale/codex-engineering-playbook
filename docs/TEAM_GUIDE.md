@@ -5,6 +5,8 @@
 
 ## Commands
 - Tests: `python -m pytest -q`
+- Deterministic review (advisory): `PYTHONPATH=. python -m tools.review.run_review --mode advisory --report-path review_report.json`
+- Install pre-push review hook (opt-in): `./scripts/install-pre-push-hook.sh`
 
 ## Conventions
 - Task Packs live in `taskpacks/`

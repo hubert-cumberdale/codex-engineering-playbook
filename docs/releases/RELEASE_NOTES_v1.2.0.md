@@ -1,85 +1,31 @@
-# Codex Orchestrator v1.2.0 — Pressure Reduction & Hygiene
-
-> Status: Planned  
-> Scope: Documentation, templates, hygiene Task Packs  
-> No orchestrator or validator behavior changes
-
----
+# Release Notes — v1.2.0
 
 ## Summary
+v1.2.0 adds a deterministic, non-AI review system with a versioned JSON report schema, opt-in local enforcement via a pre-push hook, and CI enforcement on objective violations. Orchestrator evidence collection is available as an opt-in, non-enforcing feature.
 
-v1.2.0 focuses on **reducing contributor friction** and **improving review ergonomics**
-without altering the Codex Orchestrator execution model.
+## What Changed
+- Added a deterministic review runner (`python -m tools.review.run_review`) with a versioned JSON report schema and stable violation ordering.
+- Added an opt-in pre-push hook that runs the review runner in advisory mode; strict mode is opt-in via `CODEX_REVIEW_STRICT=1`.
+- Added a CI workflow that runs the review runner in strict mode and blocks only on objective violations (exit code 2).
+- Documented the deterministic review system and schema extension guidance in Tier-1/Tier-2 docs.
+- Added opt-in orchestrator evidence collection via `ORCH_COLLECT_REVIEW=1` (non-enforcing).
 
-This release operationalizes lessons learned from v1.x usage into:
-- clearer templates
-- explicit patterns
-- routine hygiene audits
+## How to Run (Offline)
+Local advisory run:
 
----
+```bash
+PYTHONPATH=. python -m tools.review.run_review --mode advisory --report-path review_report.json
+```
 
-## What’s new
+Install the opt-in pre-push hook:
 
-### 🧹 Platform Hygiene
+```bash
+./scripts/install-pre-push-hook.sh
+```
 
-- New hygiene Task Pack:
-  - `TASK-1290-platform-taskpack-hygiene-audit`
-- Provides deterministic, evidence-first reports on:
-  - Task Pack structure
-  - Acceptance command patterns
-  - Import path footguns
-  - Determinism smells
-  - Documentation language hygiene
+## Compatibility / Breaking Changes
+None. Default behavior remains unchanged; enforcement is opt-in locally and strict only in CI.
 
-Findings are **informational only**.
-
----
-
-### 📋 v1.2 Pressure Checklist
-
-- Added Tier-2 pressure checklist documenting:
-  - Known v1.x friction points
-  - Recommended patterns
-  - “Done means” criteria
-- Serves as planning and review guidance, not enforcement.
-
----
-
-### 📐 Template & Guidance Improvements (Planned)
-
-- Explicit Python import path patterns
-- Standardized unittest discovery commands
-- Deterministic artifact rules
-- Optional multi-artifact manifest pattern
-- Improved runbook snapshot guidance
-
----
-
-## What did *not* change
-
-- ❌ No orchestrator logic
-- ❌ No new validators
-- ❌ No new flags or execution paths
-- ❌ No enforcement added to CI
-
----
-
-## Upgrade notes
-
-- Existing Task Packs remain valid and unchanged.
-- New Task Packs are encouraged (but not required) to follow v1.2 guidance.
-
----
-
-## Next steps
-
-- Update templates and walkthroughs to reflect v1.2 patterns
-- (Optional) Add a non-gating CI workflow to run hygiene audits
-- Collect feedback from real Task Pack usage
-
----
-
-## Compatibility
-
-- Fully compatible with v1.1.x
-- No migration required
+## Evidence / Artifacts
+- `review_report.json` (JSON report artifact).
+- `schema_version` = 1 in the report header.

@@ -102,7 +102,7 @@ Enforcement model:
 - Runner errors return exit code 1 and fail CI as execution errors, not as violations.
 
 Source of truth:
-- The JSON report produced by `tools/review/run_review.py` via `--report-path` is the authoritative record.
+- The JSON report produced by `tools/review/run_review.py` via `--report-path` (for example, `review_report.json` in CI and `.orchestrator_logs/review_report.json` when collected) is the authoritative record.
 - Review report schema version: 1.
 - Extension guidance: `docs/review/DETERMINISTIC_REVIEW.md`.
 

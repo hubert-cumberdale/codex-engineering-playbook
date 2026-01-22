@@ -221,6 +221,25 @@ If that statement is not true, the process has failed.
 
 ---
 
+## Deterministic Review System
+
+Local advisory run:
+- `PYTHONPATH=. python -m tools.review.run_review --mode advisory --report-path review_report.json`
+
+Opt-in pre-push hook:
+- Install: `./scripts/install-pre-push-hook.sh`
+- Strict local enforcement (optional): `CODEX_REVIEW_STRICT=1 .git/hooks/pre-push`
+
+CI behavior:
+- The `review-checks` workflow runs `python -m tools.review.run_review --mode strict --report-path review_report.json`.
+- Exit code `2` indicates objective violations and blocks CI; exit code `1` indicates runner error.
+
+Orchestrator evidence collection (opt-in, non-enforcing):
+- Set `ORCH_COLLECT_REVIEW=1` to collect `.orchestrator_logs/review_report.json`.
+- The orchestrator records `review_report_path` and `review_schema_version` in `.orchestrator_logs/manifest.json`.
+
+---
+
 ## Status
 
 This playbook is effective as of **v1.0.0**  
