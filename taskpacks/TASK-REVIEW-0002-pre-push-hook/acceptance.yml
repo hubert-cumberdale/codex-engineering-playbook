@@ -1,0 +1,9 @@
+version: 1
+
+deps: []
+
+tests:
+  commands:
+    - "PYTHONPATH=. python -m tools.review.install_hook"
+    - "CODEX_REVIEW_STRICT=1 .git/hooks/pre-push"
+    - "PYTHONPATH=. python -m pytest -q"
