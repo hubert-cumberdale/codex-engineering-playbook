@@ -238,6 +238,10 @@ Orchestrator evidence collection (opt-in, non-enforcing):
 - Set `ORCH_COLLECT_REVIEW=1` to collect `.orchestrator_logs/review_report.json`.
 - The orchestrator records `review_report_path` and `review_schema_version` in `.orchestrator_logs/manifest.json`.
 
+Evidence index query (read-only, deterministic):
+- Use `tools.evidence.cli` to list runs and artifacts from `.orchestrator_logs/evidence_index.json`.
+- See `docs/evidence/EVIDENCE_INDEX.md` for command examples and schema overview.
+
 ---
 
 ## Status

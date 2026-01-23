@@ -41,6 +41,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # v2 plugin thin-slice
+from tools.evidence import index as evidence_index
+from tools.evidence import schemas as evidence_schemas
 from tools.orchestrator.plugins.runner import run_plugin
 from tools.orchestrator.plugins.interface import ExecutionContext
 
@@ -143,6 +145,30 @@ def _collect_review_report(manifest: dict, *, manifest_path: pathlib.Path) -> No
 
     _write_manifest(manifest_path, manifest)
     print(f"[review] collected status={status} report={report_path}")
+
+
+def _collect_evidence_index(manifest: dict, *, manifest_path: pathlib.Path) -> None:
+    index_path = LOG_DIR / evidence_schemas.INDEX_FILENAME
+    try:
+        index = evidence_index.build_index([LOG_DIR], repo_root=ROOT)
+        evidence_index.write_index(index, index_path)
+        manifest["evidence_index_path"] = str(index_path.relative_to(ROOT))
+        manifest["evidence_index_schema_version"] = evidence_schemas.INDEX_SCHEMA_VERSION
+        manifest.pop("evidence_index_error", None)
+        _write_manifest(manifest_path, manifest)
+        print(f"[evidence] index written: {index_path}")
+    except Exception as exc:
+        manifest["evidence_index_error"] = f"{type(exc).__name__}: {exc}"
+        _write_manifest(manifest_path, manifest)
+        print(f"[evidence] index failed: {manifest['evidence_index_error']}")
+
+
+def _maybe_collect_evidence_index(
+    enabled: bool, manifest: dict, *, manifest_path: pathlib.Path
+) -> None:
+    if not enabled:
+        return
+    _collect_evidence_index(manifest, manifest_path=manifest_path)
 
 def _make_execution_context(tp: TaskPack, *, artifact_dir: pathlib.Path) -> ExecutionContext:
     run_id = f"{tp.id.lower()}-{int(time.time())}"
@@ -442,6 +468,7 @@ def main() -> None:
     enable_plugins = args.enable_plugins or _env_truthy("ORCH_ENABLE_PLUGINS")
     plugins_strict = args.plugins_strict or _env_truthy("ORCH_PLUGINS_STRICT")
     collect_review = _env_truthy("ORCH_COLLECT_REVIEW")
+    write_evidence_index = _env_truthy("ORCH_WRITE_EVIDENCE_INDEX")
 
     manifest_path = LOG_DIR / "manifest.json"
     if not manifest_path.exists():
@@ -538,6 +565,9 @@ def main() -> None:
 
     if collect_review:
         _collect_review_report(manifest, manifest_path=manifest_path)
+    _maybe_collect_evidence_index(
+        write_evidence_index, manifest, manifest_path=manifest_path
+    )
 
     # Push branch and open PR
     ensure_https_remote_for_ci()

@@ -1,0 +1,19 @@
+id: "TASK-EVIDENCE-0001"
+title: "Deterministic evidence index builder"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Evidence index builder exists under tools/evidence"
+    - "CLI writes deterministic evidence_index.json with stable ordering"
+    - "Tests cover ordering, schema version extraction, and self-index ignore rule"
+
+skills:
+  prefer:
+    - "python-cli-standard"

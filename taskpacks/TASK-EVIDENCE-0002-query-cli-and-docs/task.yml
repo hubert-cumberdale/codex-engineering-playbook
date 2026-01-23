@@ -1,0 +1,19 @@
+id: "TASK-EVIDENCE-0002"
+title: "Evidence index query CLI and documentation"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Evidence index query CLI supports list-runs, list-artifacts, and show-artifact"
+    - "Query commands read only from an index file and produce deterministic output"
+    - "Tier-2 documentation describes evidence index usage"
+
+skills:
+  prefer:
+    - "python-cli-standard"
