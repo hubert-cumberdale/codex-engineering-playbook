@@ -1,0 +1,18 @@
+id: "TASK-REVIEW-0005"
+title: "Allowlist orchestrator path for deterministic review"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Review allowlist includes tools/orchestrator/orchestrate.py"
+    - "Tests lock allowlist behavior for orchestrator path"
+
+skills:
+  prefer:
+    - "python-cli-standard"

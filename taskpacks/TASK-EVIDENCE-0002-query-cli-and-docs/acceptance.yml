@@ -1,0 +1,9 @@
+version: 1
+
+deps: []
+
+tests:
+  commands:
+    - "PYTHONPATH=. python -m tools.evidence.cli index --root .orchestrator_logs --out /tmp/evidence_index.json"
+    - "PYTHONPATH=. python -m tools.evidence.cli list-runs --index /tmp/evidence_index.json"
+    - "PYTHONPATH=. python -m pytest -q"

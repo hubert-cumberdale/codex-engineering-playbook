@@ -1,0 +1,7 @@
+version: 1
+
+deps: []
+
+tests:
+  commands:
+    - "PYTHONPATH=. python -m pytest -q"

@@ -30,6 +30,7 @@ ALLOWED_FILES = {
 
 ORCHESTRATOR_ALLOWLIST = {
     # Add explicit paths here if orchestrator changes are approved.
+    "tools/orchestrator/orchestrate.py",
 }
 
 TIER1_DOCS = {

@@ -1,0 +1,19 @@
+id: "TASK-EVIDENCE-0003"
+title: "Opt-in orchestrator evidence index write"
+owner: "platform"
+priority: "P2"
+type: "tooling"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Orchestrator writes evidence index only when ORCH_WRITE_EVIDENCE_INDEX=1"
+    - "Index write is best-effort and non-fatal"
+    - "Manifest records evidence index path and schema version when enabled"
+
+skills:
+  prefer:
+    - "python-cli-standard"
