@@ -1,0 +1,13 @@
+version: 1
+
+deps: []
+
+format:
+  commands: []
+
+lint:
+  commands: []
+
+tests:
+  commands:
+    - python -m pytest -q

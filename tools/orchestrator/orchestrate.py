@@ -283,6 +283,23 @@ def ensure_required_docs(tp: TaskPack, *, workspace_root: pathlib.Path) -> None:
         raise SystemExit(f"Missing required docs in workspace: {', '.join(missing)}")
 
 
+def ensure_managed_repo_contracts(tp: TaskPack, *, workspace_root: pathlib.Path, playbook_root: pathlib.Path) -> None:
+    if workspace_root == playbook_root:
+        return
+    docs_required = (tp.task.get("docs", {}) or {}).get("required", []) or []
+    allowed_paths = (tp.task.get("scope", {}) or {}).get("allowed_paths", []) or []
+    missing = []
+    if not docs_required:
+        missing.append("docs.required")
+    if not allowed_paths:
+        missing.append("scope.allowed_paths")
+    if missing:
+        raise SystemExit(
+            "Managed repo taskpacks must declare non-empty "
+            + " and ".join(missing)
+        )
+
+
 def _path_within_prefix(path: str, prefix: str) -> bool:
     path_parts = pathlib.PurePosixPath(path).parts
     prefix_parts = pathlib.PurePosixPath(prefix).parts
@@ -347,48 +364,82 @@ def gh_pr_create(
     return out
 
 def default_pr_body(tp: TaskPack, *, branch_name: str, base_branch: str) -> str:
-    plugin_spec = tp.task.get("plugin")
-    plugin_enabled = os.getenv("ORCH_ENABLE_PLUGINS", "").strip()
-
     return textwrap.dedent(
         f"""
-        ## Summary
-        Wire v2 solution plugins into `tools/orchestrator/orchestrate.py` behind a flag and run them using the v2 runner.
-
-        ## What changed
-        - Add `ORCH_ENABLE_PLUGINS=1` / `--enable-plugins` to run the plugin specified in `task.yml` (`plugin:`).
-        - Create an `ExecutionContext` (`run_id`, `workspace_dir`, `artifact_dir`, `constraints`) and run `tools.orchestrator.plugins.runner.run_plugin`.
-        - Record plugin status + result path in `.orchestrator_logs/manifest.json`.
-        - Normalize plugin artifact paths in `plugin_result.json` (relative paths for portability).
-        - CI push uses HTTPS token auth when running under GitHub Actions.
-        - Add `ORCH_BRANCH_NAME` support + PR-exists guard to prevent branch/PR spam.
-
-        ## How to run
-        ```bash
-        ORCH_BRANCH_NAME=codex/{tp.id.lower()} \\
-        TASKPACK_PATH={tp.path.as_posix()} \\
-        ORCH_ENABLE_PLUGINS=1 \\
-        RUN_CODEX_SMOKE=false \\
-        python tools/orchestrator/orchestrate.py
-        ```
-
         ## Evidence
-        - `python -m pytest -q`
-        - Plugin artifacts created under: `.orchestrator_logs/<run_id>/plugin/{tp.id}/`
-          - `echo.txt`
-          - `echo_report.md`
-          - `plugin_result.json`
+        - Evidence root: {{evidence_root}}
+        - Run ID: {{run_id}}
 
-        ## Risk / rollback
-        - Default behavior unchanged unless plugins are enabled.
-        - Rollback: revert changes in `tools/orchestrator/orchestrate.py` and `tools/orchestrator/plugins/runner.py`.
+        ### Acceptance results
+        {{acceptance_results}}
 
-        ## Checklist
-        - [x] Tests pass
-        - [x] Plugin execution behind flag
-        - [x] Manifest updated with plugin result
+        ## Files changed
+        {{files_changed}}
+
+        ## Contract docs referenced
+        {{contract_docs}}
+
+        ## Summary
+        - Task Pack: {tp.id} ({tp.title})
+        - Branch: {branch_name} → {base_branch}
         """
     ).strip()
+
+
+def _format_acceptance_results(results: list[dict[str, str]]) -> str:
+    if not results:
+        return "- No acceptance commands executed."
+    lines = []
+    for result in results:
+        status = result.get("status", "unknown")
+        section = result.get("section", "unknown")
+        command = result.get("command", "")
+        log_path = result.get("log_path", "")
+        detail = f" (log: {log_path})" if log_path else ""
+        lines.append(f"- [{status}] {section}: `{command}`{detail}")
+    return "\n".join(lines)
+
+
+def _format_contract_docs(docs: list[str]) -> str:
+    if not docs:
+        return "- None."
+    return "\n".join(f"- {doc}" for doc in docs)
+
+
+def _format_files_changed(*, workspace_root: pathlib.Path, base_ref: str) -> str:
+    proc = run(
+        f"git diff --stat {shlex.quote(base_ref)}...HEAD",
+        cwd=workspace_root,
+        check=False,
+    )
+    summary = (proc.stdout or "").strip()
+    if not summary:
+        return "No changes."
+    return summary
+
+
+def build_pr_body(
+    tp: TaskPack,
+    *,
+    branch_name: str,
+    base_branch: str,
+    evidence_root: pathlib.Path,
+    run_id: str,
+    acceptance_results: list[dict[str, str]],
+    workspace_root: pathlib.Path,
+    extra_body: str | None = None,
+) -> str:
+    template = default_pr_body(tp, branch_name=branch_name, base_branch=base_branch)
+    base = (
+        template.replace("{evidence_root}", str(evidence_root))
+        .replace("{run_id}", run_id)
+        .replace("{acceptance_results}", _format_acceptance_results(acceptance_results))
+        .replace("{files_changed}", _format_files_changed(workspace_root=workspace_root, base_ref=base_branch))
+        .replace("{contract_docs}", _format_contract_docs((tp.task.get("docs", {}) or {}).get("required", [])))
+    )
+    if extra_body:
+        return f"{base}\n\n## Notes\n{extra_body.strip()}"
+    return base
 
 def codex_exec(
     prompt: str,
@@ -515,10 +566,11 @@ def run_acceptance(
     *,
     workspace_root: pathlib.Path,
     log_dir: pathlib.Path,
-) -> None:
+) -> list[dict[str, str]]:
     # Ground-truth execution outside Codex.
     acc = tp.acceptance or {}
     deps = acc.get("deps", []) or []
+    results: list[dict[str, str]] = []
     
     if deps:
         run("python -m pip install --upgrade pip", check=True, cwd=workspace_root)
@@ -542,19 +594,43 @@ def run_acceptance(
             try:
                 out = run(cmd, check=True, cwd=workspace_root)
                 log.write_text(out.stdout or "", encoding="utf-8")
+                results.append(
+                    {
+                        "section": name,
+                        "command": cmd,
+                        "status": "pass",
+                        "log_path": str(log),
+                    }
+                )
             except subprocess.CalledProcessError as e:
                 log.write_text(e.stdout or "", encoding="utf-8")
 
                 # pytest returns 5 when no tests are collected
                 if "pytest" in cmd and e.returncode == 5:
-                    # Treat as warning, not failure
                     warn = log_dir / "acceptance_warnings.log"
                     warn.write_text(
                         "pytest reported no tests collected (exit code 5)\n",
                         encoding="utf-8",
                     )
-                    return
+                    results.append(
+                        {
+                            "section": name,
+                            "command": cmd,
+                            "status": "warning",
+                            "log_path": str(log),
+                        }
+                    )
+                    return results
+                results.append(
+                    {
+                        "section": name,
+                        "command": cmd,
+                        "status": "fail",
+                        "log_path": str(log),
+                    }
+                )
                 raise
+    return results
 
 def ensure_https_remote_for_ci(*, cwd: pathlib.Path) -> None:
     if os.getenv("GITHUB_ACTIONS", "").lower() == "true":
@@ -633,6 +709,7 @@ def main() -> None:
     LOG_DIR = log_dir
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
+    ensure_managed_repo_contracts(tp, workspace_root=workspace_root, playbook_root=ROOT)
     ensure_required_docs(tp, workspace_root=workspace_root)
 
     manifest_path = LOG_DIR / "manifest.json"
@@ -734,7 +811,7 @@ def main() -> None:
             git_commit(f"chore: {phase} outputs for {tp.id}", cwd=workspace_root)
 
     # Run acceptance checks (ground truth)
-    run_acceptance(tp, workspace_root=workspace_root, log_dir=LOG_DIR)
+    acceptance_results = run_acceptance(tp, workspace_root=workspace_root, log_dir=LOG_DIR)
     enforce_scope_allowed_paths(tp, workspace_root=workspace_root, base_ref=starting_branch)
     git_commit(f"test: acceptance checks pass for {tp.id}", cwd=workspace_root)
 
@@ -759,10 +836,19 @@ def main() -> None:
     run("git push -u origin HEAD", cwd=workspace_root)
 
     pr_body_path = tp.path / "pr_body.md"
+    extra_body = None
     if pr_body_path.exists():
-        pr_body = pr_body_path.read_text(encoding="utf-8")
-    else:
-        pr_body = default_pr_body(tp, branch_name=branch_name, base_branch=base_branch)
+        extra_body = pr_body_path.read_text(encoding="utf-8")
+    pr_body = build_pr_body(
+        tp,
+        branch_name=branch_name,
+        base_branch=base_branch,
+        evidence_root=evidence_root,
+        run_id=run_id,
+        acceptance_results=acceptance_results,
+        workspace_root=workspace_root,
+        extra_body=extra_body,
+    )
 
     title = f"{tp.id}: {tp.title}"
     if gh_pr_exists_for_head(branch_name, cwd=workspace_root):
