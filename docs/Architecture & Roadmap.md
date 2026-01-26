@@ -1,7 +1,7 @@
 > **Documentation Contract (v1.x)**  
 > This document describes the system as it exists today.  
 > It does not propose new behavior, defaults, or capabilities.
-### 1. Architectural Snapshot (v1.1.0)
+### 1. Architectural Snapshot (v1.3.0)
 
 The Codex Orchestrator is a **contract-driven execution system** built around a single invariant:
 
@@ -144,40 +144,25 @@ The roadmap is governed by strict constraints:
 
 Roadmap items expand **coverage and clarity**, not system power.
 
+This document records the **current architecture** and **shipped release summaries** only.
+Forward-looking planning is intentionally omitted from Tier 1.
+
 ---
 
-### 7. Roadmap by Version (v1.x)
+### 7. v1.x Release Summary
 
-#### v1.2.0 — Alignment & Scaffolding
+#### v1.2.0 — Alignment & Scaffolding (Implemented)
 
-- Documentation sync across all resource docs
-    
+- Documentation sync across Tier 1 and Tier 2
 - Starter `solutions/` layouts for each pillar
-    
 - Task Pack templates with pillar-specific examples
-    
 - No orchestrator or validator changes
-    
 
-#### v1.3.0 — Exemplar Depth
+#### v1.3.0 — Deterministic Evidence (Implemented)
 
-- One realistic (but optional) plugin exemplar per pillar
-    
-- Example Task Packs exercising those exemplars end-to-end
-    
-- Plugin gating and defaults unchanged
-    
-
-#### v1.4.0 — Diagnostics & Polish
-
-- Clearer acceptance output
-    
-- Improved failure diagnostics
-    
-- Better plugin error surfacing
-    
-- Defaults and guarantees unchanged
-    
+- Deterministic review runner (schema v1) with CI enforcement of objective violations
+- Evidence index builder + query CLI (schema v1)
+- Opt-in orchestrator evidence collection and index writing (no default changes)
 
 All versions preserve v1 behavior.
 
@@ -216,5 +201,3 @@ Any future work that challenges these assumptions would require a **major versio
     
 
 ---
-
-I

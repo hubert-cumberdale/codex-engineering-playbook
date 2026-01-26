@@ -53,6 +53,8 @@ The following guarantees apply to **all runs**, regardless of solution domain or
         
     - Artifacts are treated as first-class evidence
         
+    - Evidence index provides a read-only, deterministic inventory of evidence
+        
 - **No implicit state**
     
     - No long-lived agents
@@ -164,6 +166,11 @@ Validators enforce:
 
 Acceptance is binary: a task either satisfies its contract or it does not.
 
+Deterministic evidence tooling:
+- `tools.review.run_review` produces a versioned review report (schema v1).
+- `tools.evidence` builds a read-only evidence index (schema v1) and provides query commands.
+- Orchestrator collection is opt-in via `ORCH_COLLECT_REVIEW=1` and `ORCH_WRITE_EVIDENCE_INDEX=1`.
+
 ---
 
 ### 7. Plugins (Optional, Gated)
@@ -224,7 +231,7 @@ The orchestrator executes what is declared—nothing more, nothing less.
 
 ### Assumptions made
 
-- v1.1.0 behavior is frozen and authoritative.
+- v1.3.0 behavior is frozen and authoritative.
     
 - Acceptance remains command-only (no remote validation).
     
