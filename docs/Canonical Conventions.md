@@ -37,7 +37,8 @@ Naming:
     - `max_attempts_per_phase`: 2
     - `max_total_changed_lines`: 800
     - repeated error signature limit: 2
-- Always produces `.orchestrator_logs/manifest.json` + logs so artifacts are downloadable.
+- Always produces per-run manifests under `.orchestrator_logs/<run_id>/manifest.json` (or
+  `<evidence_dir>/<run_id>/manifest.json` when configured) plus logs so artifacts are downloadable.
 ### Safety
 - SAFE mode is default.
 - Network tools prompt; secret reads forbidden.

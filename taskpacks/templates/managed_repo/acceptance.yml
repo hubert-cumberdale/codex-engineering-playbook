@@ -1,0 +1,16 @@
+version: 1
+
+deps: []
+
+format:
+  commands:
+    - python -m compileall -q .
+
+lint:
+  commands:
+    - python -m ruff check .
+
+tests:
+  commands:
+    # v1.2 hygiene (advisory): explicit import posture for local/CI parity
+    - PYTHONPATH=. python -m pytest -q

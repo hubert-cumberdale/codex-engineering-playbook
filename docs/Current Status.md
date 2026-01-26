@@ -2,10 +2,10 @@
 > This document describes the system as it exists today.  
 > It does not propose new behavior, defaults, or capabilities.
 
-> **Status as of:** v1.1.0 (v1.2.0 scaffolding in progress)
-### 1. Current State (Post v1.1.0)
+> **Status as of:** v1.3.0
+### 1. Current State (Post v1.3.0)
 
-As of **v1.1.0**, the Codex Orchestrator is **stable, contract-driven, and production-safe** for its intended scope.
+As of **v1.3.0**, the Codex Orchestrator is **stable, contract-driven, and production-safe** for its intended scope.
 
 The system reliably:
 - Executes Task Packs end-to-end
@@ -45,6 +45,13 @@ The following are **established and relied upon**:
     - Bounded retries and circuit breakers
     - Deterministic phase execution
     - Always emits logs and a manifest
+- **Deterministic review system**
+    - Local advisory runner (`tools.review.run_review`)
+    - CI enforcement of objective violations only
+    - Versioned schema (v1)
+- **Evidence index**
+    - Read-only, deterministic index of `.orchestrator_logs` (or external evidence roots)
+    - Schema v1 at `.orchestrator_logs/evidence_index.json` (or `<evidence_dir>/evidence_index.json`)
 - **PR hygiene**
     - Stable branch naming
     - PR-exists guard (no spam)
@@ -61,6 +68,10 @@ The following capabilities exist but are **explicitly non-default**:
 	- Disabled unless `ORCH_ENABLE_PLUGINS` is set
 	- Remains subordinate to Task Pack contracts
     - Cannot introduce implicit state or background behavior 
+- **Orchestrator evidence collection**
+    - Review report collection enabled only with `ORCH_COLLECT_REVIEW=1`
+    - Evidence index writing enabled only with `ORCH_WRITE_EVIDENCE_INDEX=1`
+    - Non-enforcing and best-effort
 - **Solution-specific execution paths**
     - Located under `solutions/`
     - Treated as optional implementations, not platform features
@@ -104,48 +115,15 @@ Any future work must preserve these exclusions unless a major version boundary i
 
 ---
 
-### 6. Near-Term Direction (v1.x, High-Level)
+### 6. Ongoing v1.x Maintenance
 
-Planned work remains **documentation- and coverage-focused**, not architectural:
-
-1. **Documentation alignment**
-    - Ensure all resource docs reflect current, not aspirational, behavior
-2. **Solution coverage expansion**
-    - Starter layouts and exemplars for:
-        - security (beyond BAS)
-        - web
-        - game
-3. **Task Pack templates**
-    - Pillar-specific examples
-    - Acceptance patterns tuned per domain
-    - No orchestrator changes
-4. **Skill catalog alignment**
-    - Pillar-first taxonomy
-    - Security solutions treated as domains, not the platform center
-
-All planned work is **contract-safe** and preserves v1 guarantees.
-### Next (v1.x, contract-safe)
-
-1) v1.2.0 scaffolding and coverage (in progress)
-   - Solution directory structure created for security, web, and game
-   - Web Task Pack template walkthrough added
-   - Security Task Pack template walkthrough added
-   - Game Task Pack template walkthrough added
-   - Skill docs added to support web acceptance and build evidence patterns
-
-2) Example Task Packs (next)
-   - Create small, realistic example Task Packs per pillar
-   - Use templates and walkthroughs without changing orchestrator behavior
-   - Ensure examples are validator-clean and evidence-first
-
-3) Continued documentation hygiene
-   - Keep Tier 1 docs aligned with current reality
-   - No aspirational or roadmap-driven language
+Ongoing work remains **documentation- and coverage-focused**, not architectural.
+It preserves v1 guarantees and avoids default behavior changes.
 
 ---
 
 ### Assumptions made
-- v1.1.0 is the baseline and will not be re-interpreted.
+- v1.3.0 is the baseline and will not be re-interpreted.
 - “Current Status” must describe _operational truth_, not intent.
 - Security breadth is important, but the platform remains solution-agnostic.
 - No roadmap item implies default-on behavior.

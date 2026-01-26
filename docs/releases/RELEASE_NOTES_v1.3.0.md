@@ -23,7 +23,7 @@ any default enforcement or orchestrator behavior.
 - Enabled via environment variable:
   - `ORCH_WRITE_EVIDENCE_INDEX=1`
 - When enabled:
-  - Writes `.orchestrator_logs/evidence_index.json`
+  - Writes `.orchestrator_logs/evidence_index.json` (or `<evidence_dir>/evidence_index.json`)
   - Records `evidence_index_path` and `evidence_index_schema_version`
     in the orchestrator manifest.
 - Index generation is best-effort and never fails a run.

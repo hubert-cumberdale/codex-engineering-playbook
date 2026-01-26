@@ -1,0 +1,55 @@
+version: 1
+id: TEMPLATE-managed-repo
+title: "TEMPLATE: Managed repo task pack"
+type: managed_repo
+
+task:
+  name: "<TASK-ID>: <short managed repo objective>"
+  pillar: managed_repo
+  description: >
+    Perform a scoped, auditable change in a managed repository workspace.
+
+# workspace can be a registry key (preferred) or a direct path.
+workspace: "<registry-key-or-path>"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+scope:
+  # Optional but powerful: fail if changes touch anything outside these paths.
+  # Keep this per-task specific once you copy the template.
+  allowed_paths:
+    - src/
+    - tests/
+    - docs/
+
+docs:
+  # These MUST exist in the target workspace repo.
+  required:
+    - docs/GOVERNANCE.md
+    - docs/CURRENT_WORK.md
+
+acceptance:
+  file: acceptance.yml
+  notes: "Acceptance runs locally and must be deterministic."
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "No network access or cloud mutation unless explicitly declared."
+    - "Changes stay within declared scope."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 20
+
+artifacts:
+  optional:
+    - artifacts/**
+
+review:
+  required: true
+  notes: >
+    Managed repo tasks must remain scoped, reviewable, and aligned
+    to the target repo's governance and work-in-progress rules.
