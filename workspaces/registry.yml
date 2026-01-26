@@ -1,0 +1,30 @@
+# Workspace registry for managed repositories.
+# The orchestrator NEVER nests repos inside this repo.
+# It targets external working directories (local) or ephemeral clones (future).
+
+version: 1
+
+defaults:
+  kind: local_path
+  evidence_mode: in_repo
+  # If evidence_mode = external_dir, evidence_dir must be set per workspace.
+  acceptance:
+    - python -m pytest -q
+
+workspaces:
+  aiq-cli:
+    kind: local_path
+    path: /home/noob/repos/aiq-cli
+    evidence_mode: in_repo
+    acceptance:
+      - python -m pytest -q
+
+  # Example private repo profile (do not commit secrets).
+  # client_x_private:
+  #   kind: local_path
+  #   path: /home/noob/dev/private/client-x
+  #   evidence_mode: external_dir
+  #   evidence_dir: /home/noob/dev/evidence/client-x
+  #   acceptance:
+  #     - python -m pytest -q
+

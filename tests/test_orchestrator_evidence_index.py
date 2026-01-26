@@ -13,34 +13,49 @@ def read_json(path: Path) -> dict:
 
 
 def setup_orchestrator_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    log_dir = tmp_path / ".orchestrator_logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
+    log_root = tmp_path / ".orchestrator_logs"
+    log_root.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(orchestrate, "ROOT", tmp_path)
-    monkeypatch.setattr(orchestrate, "LOG_DIR", log_dir)
-    return log_dir
+    return log_root
 
 
 def test_evidence_index_default_disabled(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    log_dir = setup_orchestrator_paths(tmp_path, monkeypatch)
-    manifest_path = log_dir / "manifest.json"
-    manifest = {"result": "started"}
+    log_root = setup_orchestrator_paths(tmp_path, monkeypatch)
+    run_dir = log_root / "run-a"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = run_dir / "manifest.json"
+    manifest = {"result": "started", "run_id": "run-a"}
     orchestrate._write_manifest(manifest_path, manifest)
 
-    orchestrate._maybe_collect_evidence_index(False, manifest, manifest_path=manifest_path)
+    orchestrate._maybe_collect_evidence_index(
+        False,
+        manifest,
+        manifest_path=manifest_path,
+        evidence_root=log_root,
+        repo_root=tmp_path,
+    )
 
-    assert not (log_dir / "evidence_index.json").exists()
-    assert read_json(manifest_path) == {"result": "started"}
+    assert not (log_root / "evidence_index.json").exists()
+    assert read_json(manifest_path) == {"result": "started", "run_id": "run-a"}
 
 
 def test_evidence_index_opt_in(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    log_dir = setup_orchestrator_paths(tmp_path, monkeypatch)
-    manifest_path = log_dir / "manifest.json"
-    manifest = {"result": "started"}
+    log_root = setup_orchestrator_paths(tmp_path, monkeypatch)
+    run_dir = log_root / "run-b"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = run_dir / "manifest.json"
+    manifest = {"result": "started", "run_id": "run-b"}
     orchestrate._write_manifest(manifest_path, manifest)
 
-    orchestrate._maybe_collect_evidence_index(True, manifest, manifest_path=manifest_path)
+    orchestrate._maybe_collect_evidence_index(
+        True,
+        manifest,
+        manifest_path=manifest_path,
+        evidence_root=log_root,
+        repo_root=tmp_path,
+    )
 
-    index_path = log_dir / "evidence_index.json"
+    index_path = log_root / "evidence_index.json"
     assert index_path.exists()
     index = read_json(index_path)
     assert index["schema_version"] == 1
@@ -54,9 +69,11 @@ def test_evidence_index_opt_in(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 def test_evidence_index_failure_is_non_fatal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    log_dir = setup_orchestrator_paths(tmp_path, monkeypatch)
-    manifest_path = log_dir / "manifest.json"
-    manifest = {"result": "started"}
+    log_root = setup_orchestrator_paths(tmp_path, monkeypatch)
+    run_dir = log_root / "run-c"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = run_dir / "manifest.json"
+    manifest = {"result": "started", "run_id": "run-c"}
     orchestrate._write_manifest(manifest_path, manifest)
 
     def _raise(*args, **kwargs):
@@ -64,9 +81,15 @@ def test_evidence_index_failure_is_non_fatal(
 
     monkeypatch.setattr(orchestrate.evidence_index, "build_index", _raise)
 
-    orchestrate._maybe_collect_evidence_index(True, manifest, manifest_path=manifest_path)
+    orchestrate._maybe_collect_evidence_index(
+        True,
+        manifest,
+        manifest_path=manifest_path,
+        evidence_root=log_root,
+        repo_root=tmp_path,
+    )
 
-    assert not (log_dir / "evidence_index.json").exists()
+    assert not (log_root / "evidence_index.json").exists()
     manifest_out = read_json(manifest_path)
     assert manifest_out.get("evidence_index_error") == "ValueError: boom"
     assert "evidence_index_path" not in manifest_out

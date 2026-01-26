@@ -33,8 +33,9 @@ import yaml
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-LOG_DIR = ROOT / ".orchestrator_logs"
-LOG_DIR.mkdir(exist_ok=True)
+LOG_ROOT = ROOT / ".orchestrator_logs"
+LOG_DIR = LOG_ROOT
+LOG_ROOT.mkdir(exist_ok=True)
 
 # Ensure repo root is on sys.path so absolute imports like `tools.*` work
 if str(ROOT) not in sys.path:
@@ -45,6 +46,7 @@ from tools.evidence import index as evidence_index
 from tools.evidence import schemas as evidence_schemas
 from tools.orchestrator.plugins.runner import run_plugin
 from tools.orchestrator.plugins.interface import ExecutionContext
+from tools.orchestrator.workspaces import WorkspaceRegistryError, evidence_paths, resolve_workspace
 
 @dataclasses.dataclass
 class TaskPack:
@@ -76,7 +78,7 @@ class TaskPack:
 
 
 def run(cmd: str, *, cwd: pathlib.Path = ROOT, check: bool = True) -> subprocess.CompletedProcess:
-    return subprocess.run(
+    proc = subprocess.run(
         cmd,
         cwd=str(cwd),
         shell=True,
@@ -111,22 +113,56 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         help="Fail the run if plugin execution errors (default: non-fatal, recorded in manifest). "
             "Can also set ORCH_PLUGINS_STRICT=1.",
     )
+    p.add_argument(
+        "--workspace",
+        help="Workspace registry name or local path. Can also set ORCH_WORKSPACE.",
+    )
     return p.parse_args(argv)
 
 def _env_truthy(name: str) -> bool:
     v = os.getenv(name, "").strip().lower()
     return v in ("1", "true", "yes", "y", "on")
 
+def _path_for_manifest(path: pathlib.Path, *, repo_root: pathlib.Path) -> str:
+    try:
+        return str(path.relative_to(repo_root))
+    except ValueError:
+        return str(path)
+
+
+def _is_relative_to(path: pathlib.Path, base: pathlib.Path) -> bool:
+    try:
+        path.relative_to(base)
+        return True
+    except ValueError:
+        return False
+
+
+def select_workspace_spec(
+    *,
+    cli_value: Optional[str],
+    env_value: Optional[str],
+    task_value: Optional[str],
+) -> Optional[str]:
+    return cli_value or env_value or task_value
+
 def _write_manifest(path: pathlib.Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
-def _collect_review_report(manifest: dict, *, manifest_path: pathlib.Path) -> None:
-    report_path = LOG_DIR / "review_report.json"
+def _collect_review_report(
+    manifest: dict,
+    *,
+    manifest_path: pathlib.Path,
+    log_dir: pathlib.Path,
+    repo_root: pathlib.Path,
+    cwd: pathlib.Path,
+) -> None:
+    report_path = log_dir / "review_report.json"
     cmd = (
-        f"{shlex.quote(sys.executable)} -m tools.review.run_review "
+        f"PYTHONPATH={shlex.quote(str(ROOT))} {shlex.quote(sys.executable)} -m tools.review.run_review "
         f"--mode advisory --report-path {shlex.quote(str(report_path))}"
     )
-    proc = run(cmd, check=False)
+    proc = run(cmd, check=False, cwd=cwd)
 
     if proc.returncode == 0:
         status = "pass"
@@ -136,7 +172,7 @@ def _collect_review_report(manifest: dict, *, manifest_path: pathlib.Path) -> No
         status = "error"
 
     if report_path.exists():
-        manifest["review_report_path"] = str(report_path.relative_to(ROOT))
+        manifest["review_report_path"] = _path_for_manifest(report_path, repo_root=repo_root)
         manifest["review_schema_version"] = 1
         manifest["review_status"] = status
     else:
@@ -147,12 +183,18 @@ def _collect_review_report(manifest: dict, *, manifest_path: pathlib.Path) -> No
     print(f"[review] collected status={status} report={report_path}")
 
 
-def _collect_evidence_index(manifest: dict, *, manifest_path: pathlib.Path) -> None:
-    index_path = LOG_DIR / evidence_schemas.INDEX_FILENAME
+def _collect_evidence_index(
+    manifest: dict,
+    *,
+    manifest_path: pathlib.Path,
+    evidence_root: pathlib.Path,
+    repo_root: pathlib.Path,
+) -> None:
+    index_path = evidence_root / evidence_schemas.INDEX_FILENAME
     try:
-        index = evidence_index.build_index([LOG_DIR], repo_root=ROOT)
+        index = evidence_index.build_index([evidence_root], repo_root=repo_root)
         evidence_index.write_index(index, index_path)
-        manifest["evidence_index_path"] = str(index_path.relative_to(ROOT))
+        manifest["evidence_index_path"] = _path_for_manifest(index_path, repo_root=repo_root)
         manifest["evidence_index_schema_version"] = evidence_schemas.INDEX_SCHEMA_VERSION
         manifest.pop("evidence_index_error", None)
         _write_manifest(manifest_path, manifest)
@@ -164,23 +206,35 @@ def _collect_evidence_index(manifest: dict, *, manifest_path: pathlib.Path) -> N
 
 
 def _maybe_collect_evidence_index(
-    enabled: bool, manifest: dict, *, manifest_path: pathlib.Path
+    enabled: bool,
+    manifest: dict,
+    *,
+    manifest_path: pathlib.Path,
+    evidence_root: pathlib.Path,
+    repo_root: pathlib.Path,
 ) -> None:
     if not enabled:
         return
-    _collect_evidence_index(manifest, manifest_path=manifest_path)
+    _collect_evidence_index(
+        manifest,
+        manifest_path=manifest_path,
+        evidence_root=evidence_root,
+        repo_root=repo_root,
+    )
 
-def _make_execution_context(tp: TaskPack, *, artifact_dir: pathlib.Path) -> ExecutionContext:
-    run_id = f"{tp.id.lower()}-{int(time.time())}"
-
-    workspace_dir = ROOT / ".orchestrator_workspace" / run_id
-    workspace_dir.mkdir(parents=True, exist_ok=True)
-
+def _make_execution_context(
+    tp: TaskPack,
+    *,
+    run_id: str,
+    workspace_dir: pathlib.Path,
+    artifact_dir: pathlib.Path,
+    log_dir: pathlib.Path,
+) -> ExecutionContext:
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
     constraints = dict(tp.task.get("constraints", {}) or {})
 
-    plugin_log_path = LOG_DIR / f"plugin_{tp.id.lower()}.log"
+    plugin_log_path = log_dir / f"plugin_{tp.id.lower()}.log"
 
     def _log(*args, **kwargs) -> None:
         msg = " ".join(str(a) for a in args)
@@ -218,29 +272,78 @@ def load_taskpack(tp_path: pathlib.Path) -> TaskPack:
     return TaskPack(path=tp_path, task=task, spec=spec, risk=risk, acceptance=acceptance)
 
 
-def git_current_branch() -> str:
-    return run("git rev-parse --abbrev-ref HEAD").stdout.strip()
+def ensure_required_docs(tp: TaskPack, *, workspace_root: pathlib.Path) -> None:
+    required = (tp.task.get("docs", {}) or {}).get("required", []) or []
+    missing = []
+    for rel in required:
+        path = workspace_root / rel
+        if not path.exists():
+            missing.append(str(path))
+    if missing:
+        raise SystemExit(f"Missing required docs in workspace: {', '.join(missing)}")
 
 
-def git_has_changes() -> bool:
-    out = run("git status --porcelain", check=False).stdout.strip()
+def _path_within_prefix(path: str, prefix: str) -> bool:
+    path_parts = pathlib.PurePosixPath(path).parts
+    prefix_parts = pathlib.PurePosixPath(prefix).parts
+    if not prefix_parts:
+        return False
+    return path_parts[: len(prefix_parts)] == prefix_parts
+
+
+def enforce_scope_allowed_paths(
+    tp: TaskPack,
+    *,
+    workspace_root: pathlib.Path,
+    base_ref: str,
+) -> None:
+    allowed = (tp.task.get("scope", {}) or {}).get("allowed_paths", []) or []
+    if not allowed:
+        return
+    diff = run(
+        f"git diff --name-only {shlex.quote(base_ref)}...HEAD",
+        cwd=workspace_root,
+        check=True,
+    ).stdout
+    changed = [line.strip() for line in (diff or "").splitlines() if line.strip()]
+    violations = [p for p in changed if not any(_path_within_prefix(p, a) for a in allowed)]
+    if violations:
+        raise SystemExit(
+            "Changes outside scope.allowed_paths: "
+            + ", ".join(sorted(violations))
+        )
+
+
+def git_current_branch(*, cwd: pathlib.Path) -> str:
+    return run("git rev-parse --abbrev-ref HEAD", cwd=cwd).stdout.strip()
+
+
+def git_has_changes(*, cwd: pathlib.Path) -> bool:
+    out = run("git status --porcelain", check=False, cwd=cwd).stdout.strip()
     return bool(out)
 
 
-def git_commit(message: str) -> None:
-    run("git add -A")
-    if not git_has_changes():
+def git_commit(message: str, *, cwd: pathlib.Path) -> None:
+    run("git add -A", cwd=cwd)
+    if not git_has_changes(cwd=cwd):
         return
-    run(f"git commit -m {shlex.quote(message)}")
+    run(f"git commit -m {shlex.quote(message)}", cwd=cwd)
 
 
-def gh_pr_create(title: str, body: str, base: str = "main") -> str:
+def gh_pr_create(
+    title: str,
+    body: str,
+    *,
+    base: str = "main",
+    cwd: pathlib.Path,
+    log_dir: pathlib.Path,
+) -> str:
     # GitHub Actions usually has GH_TOKEN set automatically.
     # We'll rely on `gh` being present on runner (it is on ubuntu-latest).
-    body_file = LOG_DIR / "pr_body.md"
+    body_file = log_dir / "pr_body.md"
     body_file.write_text(body, encoding="utf-8")
     cmd = f"gh pr create --base {shlex.quote(base)} --title {shlex.quote(title)} --body-file {shlex.quote(str(body_file))}"
-    out = run(cmd).stdout.strip().splitlines()[-1]
+    out = run(cmd, cwd=cwd).stdout.strip().splitlines()[-1]
     return out
 
 def default_pr_body(tp: TaskPack, *, branch_name: str, base_branch: str) -> str:
@@ -271,7 +374,7 @@ def default_pr_body(tp: TaskPack, *, branch_name: str, base_branch: str) -> str:
 
         ## Evidence
         - `python -m pytest -q`
-        - Plugin artifacts created under: `.orchestrator_logs/plugin/{tp.id}/`
+        - Plugin artifacts created under: `.orchestrator_logs/<run_id>/plugin/{tp.id}/`
           - `echo.txt`
           - `echo_report.md`
           - `plugin_result.json`
@@ -287,16 +390,29 @@ def default_pr_body(tp: TaskPack, *, branch_name: str, base_branch: str) -> str:
         """
     ).strip()
 
-def codex_exec(prompt: str, *, log_name: str) -> Tuple[int, str]:
+def codex_exec(
+    prompt: str,
+    *,
+    log_name: str,
+    cwd: pathlib.Path,
+    log_dir: pathlib.Path,
+) -> Tuple[int, str]:
     """
     Runs Codex in non-interactive mode.
     We use `codex exec` so the agent can modify files and run commands as needed,
     but we keep our own acceptance commands outside of Codex as a safety/ground-truth step.
     """
-    log_path = LOG_DIR / f"{log_name}.log"
+    log_path = log_dir / f"{log_name}.log"
     # Use --json if you want structured output later; for now keep plain logs.
     cmd = f"codex exec {shlex.quote(prompt)}"
-    proc = subprocess.run(cmd, cwd=str(ROOT), shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.run(
+        cmd,
+        cwd=str(cwd),
+        shell=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
     log_path.write_text(proc.stdout or "", encoding="utf-8")
     return proc.returncode, proc.stdout or ""
 
@@ -394,17 +510,23 @@ def phase_prompt(tp: TaskPack, phase: str) -> str:
     raise ValueError(f"Unknown phase: {phase}")
 
 
-def run_acceptance(tp: TaskPack) -> None:
+def run_acceptance(
+    tp: TaskPack,
+    *,
+    workspace_root: pathlib.Path,
+    log_dir: pathlib.Path,
+) -> None:
     # Ground-truth execution outside Codex.
     acc = tp.acceptance or {}
     deps = acc.get("deps", []) or []
     
     if deps:
-        run("python -m pip install --upgrade pip", check=True)
+        run("python -m pip install --upgrade pip", check=True, cwd=workspace_root)
         run(
             "python -m pip install --disable-pip-version-check "
             + " ".join(map(shlex.quote, deps)),
             check=True,
+            cwd=workspace_root,
         )
 
     sections = [
@@ -416,9 +538,9 @@ def run_acceptance(tp: TaskPack) -> None:
     for name, section in sections:
         cmds = section.get("commands", []) if isinstance(section, dict) else []
         for i, cmd in enumerate(cmds):
-            log = LOG_DIR / f"acceptance_{name}_{i}.log"
+            log = log_dir / f"acceptance_{name}_{i}.log"
             try:
-                out = run(cmd, check=True)
+                out = run(cmd, check=True, cwd=workspace_root)
                 log.write_text(out.stdout or "", encoding="utf-8")
             except subprocess.CalledProcessError as e:
                 log.write_text(e.stdout or "", encoding="utf-8")
@@ -426,7 +548,7 @@ def run_acceptance(tp: TaskPack) -> None:
                 # pytest returns 5 when no tests are collected
                 if "pytest" in cmd and e.returncode == 5:
                     # Treat as warning, not failure
-                    warn = LOG_DIR / "acceptance_warnings.log"
+                    warn = log_dir / "acceptance_warnings.log"
                     warn.write_text(
                         "pytest reported no tests collected (exit code 5)\n",
                         encoding="utf-8",
@@ -434,7 +556,7 @@ def run_acceptance(tp: TaskPack) -> None:
                     return
                 raise
 
-def ensure_https_remote_for_ci() -> None:
+def ensure_https_remote_for_ci(*, cwd: pathlib.Path) -> None:
     if os.getenv("GITHUB_ACTIONS", "").lower() == "true":
         repo = os.getenv("GITHUB_REPOSITORY")  # e.g. owner/name
         if not repo:
@@ -443,44 +565,35 @@ def ensure_https_remote_for_ci() -> None:
         token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
         if not token:
             return
-        run(f"git remote set-url origin https://x-access-token:{token}@github.com/{repo}.git", check=True)
+        run(
+            f"git remote set-url origin https://x-access-token:{token}@github.com/{repo}.git",
+            check=True,
+            cwd=cwd,
+        )
 
-def gh_pr_exists_for_head(branch: str) -> bool:
+def gh_pr_exists_for_head(branch: str, *, cwd: pathlib.Path) -> bool:
     proc = run(
         f"gh pr list --head {shlex.quote(branch)} --json number -q 'length'",
         check=False,
+        cwd=cwd,
     )
     return proc.returncode == 0 and (proc.stdout or "").strip() not in ("", "0")
 
-def git_checkout_branch(branch: str) -> None:
+def git_checkout_branch(branch: str, *, cwd: pathlib.Path) -> None:
     # Create branch if it doesn't exist; otherwise just checkout
-    proc = run(f"git rev-parse --verify {shlex.quote(branch)}", check=False)
+    proc = run(f"git rev-parse --verify {shlex.quote(branch)}", check=False, cwd=cwd)
     if proc.returncode == 0:
-        run(f"git checkout {shlex.quote(branch)}")
+        run(f"git checkout {shlex.quote(branch)}", cwd=cwd)
     else:
-        run(f"git checkout -b {shlex.quote(branch)}")
+        run(f"git checkout -b {shlex.quote(branch)}", cwd=cwd)
 
 def main() -> None:
-
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     args = parse_args(sys.argv[1:])
     enable_plugins = args.enable_plugins or _env_truthy("ORCH_ENABLE_PLUGINS")
     plugins_strict = args.plugins_strict or _env_truthy("ORCH_PLUGINS_STRICT")
     collect_review = _env_truthy("ORCH_COLLECT_REVIEW")
     write_evidence_index = _env_truthy("ORCH_WRITE_EVIDENCE_INDEX")
-
-    manifest_path = LOG_DIR / "manifest.json"
-    if not manifest_path.exists():
-        manifest_path.write_text('{"result":"started"}\n', encoding="utf-8")
-
-    manifest = {"result": "started"}
-    if manifest_path.exists():
-        try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        except Exception:
-            manifest = {"result": "started", "warning": "manifest_unreadable"}
-    _write_manifest(manifest_path, manifest)
 
     taskpack_path = pathlib.Path(must_env("TASKPACK_PATH")).resolve()
     if not taskpack_path.exists():
@@ -491,13 +604,60 @@ def main() -> None:
 
     tp = load_taskpack(taskpack_path)
 
-    starting_branch = git_current_branch()
+    workspace_spec = select_workspace_spec(
+        cli_value=args.workspace,
+        env_value=os.getenv("ORCH_WORKSPACE"),
+        task_value=tp.task.get("workspace"),
+    )
+    registry_path = ROOT / "workspaces" / "registry.yml"
+    try:
+        workspace = resolve_workspace(
+            spec=workspace_spec,
+            registry_path=registry_path,
+            default_root=ROOT,
+        )
+    except WorkspaceRegistryError as exc:
+        raise SystemExit(str(exc)) from exc
+
+    workspace_root = workspace.root
+    evidence_root, log_dir = evidence_paths(workspace, run_id=f"{tp.id.lower()}-{int(time.time())}")
+
+    if workspace_root != ROOT:
+        if _is_relative_to(evidence_root.resolve(), ROOT.resolve()):
+            raise SystemExit("Managed repo evidence must not be written inside the playbook repo.")
+
+    run_id = log_dir.name
+
+    global LOG_DIR, LOG_ROOT
+    LOG_ROOT = evidence_root
+    LOG_DIR = log_dir
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+    ensure_required_docs(tp, workspace_root=workspace_root)
+
+    manifest_path = LOG_DIR / "manifest.json"
+    if not manifest_path.exists():
+        manifest_path.write_text('{"result":"started"}\n', encoding="utf-8")
+
+    manifest = {"result": "started", "run_id": run_id}
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            manifest = {"result": "started", "warning": "manifest_unreadable", "run_id": run_id}
+    if "run_id" not in manifest:
+        manifest["run_id"] = run_id
+    _write_manifest(manifest_path, manifest)
+
+    manifest_repo_root = workspace_root if _is_relative_to(evidence_root, workspace_root) else evidence_root
+
+    starting_branch = git_current_branch(cwd=workspace_root)
     base_branch = os.getenv("BASE_BRANCH") or starting_branch
 
     explicit_branch = os.getenv("ORCH_BRANCH_NAME")
     branch_name = explicit_branch or f"{branch_prefix}/{tp.id.lower()}-{int(time.time())}"
 
-    git_checkout_branch(branch_name)
+    git_checkout_branch(branch_name, cwd=workspace_root)
 
     run_codex = os.getenv("RUN_CODEX_SMOKE", "false").lower() == "true"
 
@@ -514,12 +674,21 @@ def main() -> None:
         else:
             artifact_dir = LOG_DIR / "plugin" / tp.id
             try:
-                ctx = _make_execution_context(tp, artifact_dir=artifact_dir)
+                ctx = _make_execution_context(
+                    tp,
+                    run_id=run_id,
+                    workspace_dir=workspace_root,
+                    artifact_dir=artifact_dir,
+                    log_dir=LOG_DIR,
+                )
                 plugin_result = run_plugin(tp.task, ctx)
                 manifest["plugin"] = {
                     "spec": plugin_spec,
                     "status": plugin_result.get("status", "UNKNOWN"),
-                    "result_path": str(pathlib.Path(ctx.artifact_dir).relative_to(ROOT) / "plugin_result.json"),
+                    "result_path": _path_for_manifest(
+                        pathlib.Path(ctx.artifact_dir) / "plugin_result.json",
+                        repo_root=manifest_repo_root,
+                    ),
                     "id": plugin_result.get("plugin", {}).get("id"),
                     "version": plugin_result.get("plugin", {}).get("version"),
                 }
@@ -540,7 +709,12 @@ def main() -> None:
         ok = False
         for attempt in range(1, max_attempts + 1):
             prompt = phase_prompt(tp, phase)
-            rc, out = codex_exec(prompt, log_name=f"{phase}_attempt{attempt}")
+            rc, out = codex_exec(
+                prompt,
+                log_name=f"{phase}_attempt{attempt}",
+                cwd=workspace_root,
+                log_dir=LOG_DIR,
+            )
             if rc == 0:
                 ok = True
                 break
@@ -550,28 +724,39 @@ def main() -> None:
 
         if not ok:
             # Commit whatever we have (so we can inspect diffs in PR if desired)
-            git_commit(f"chore: partial changes before failure in {phase}")
-            ensure_https_remote_for_ci()
-            run("git push -u origin HEAD")
+            git_commit(f"chore: partial changes before failure in {phase}", cwd=workspace_root)
+            ensure_https_remote_for_ci(cwd=workspace_root)
+            run("git push -u origin HEAD", cwd=workspace_root)
             raise SystemExit(f"Phase failed after {max_attempts} attempts: {phase}")
 
         # Commit after key phases (planner writes files; still commit for traceability)
         if phase in ("planner", "implementer", "verifier", "security"):
-            git_commit(f"chore: {phase} outputs for {tp.id}")
+            git_commit(f"chore: {phase} outputs for {tp.id}", cwd=workspace_root)
 
     # Run acceptance checks (ground truth)
-    run_acceptance(tp)
-    git_commit(f"test: acceptance checks pass for {tp.id}")
+    run_acceptance(tp, workspace_root=workspace_root, log_dir=LOG_DIR)
+    enforce_scope_allowed_paths(tp, workspace_root=workspace_root, base_ref=starting_branch)
+    git_commit(f"test: acceptance checks pass for {tp.id}", cwd=workspace_root)
 
     if collect_review:
-        _collect_review_report(manifest, manifest_path=manifest_path)
+        _collect_review_report(
+            manifest,
+            manifest_path=manifest_path,
+            log_dir=LOG_DIR,
+            repo_root=manifest_repo_root,
+            cwd=workspace_root,
+        )
     _maybe_collect_evidence_index(
-        write_evidence_index, manifest, manifest_path=manifest_path
+        write_evidence_index,
+        manifest,
+        manifest_path=manifest_path,
+        evidence_root=evidence_root,
+        repo_root=manifest_repo_root,
     )
 
     # Push branch and open PR
-    ensure_https_remote_for_ci()
-    run("git push -u origin HEAD")
+    ensure_https_remote_for_ci(cwd=workspace_root)
+    run("git push -u origin HEAD", cwd=workspace_root)
 
     pr_body_path = tp.path / "pr_body.md"
     if pr_body_path.exists():
@@ -580,10 +765,16 @@ def main() -> None:
         pr_body = default_pr_body(tp, branch_name=branch_name, base_branch=base_branch)
 
     title = f"{tp.id}: {tp.title}"
-    if gh_pr_exists_for_head(branch_name):
+    if gh_pr_exists_for_head(branch_name, cwd=workspace_root):
         print("PR already exists for this branch; skipping creation.")
     else:
-        pr_out = gh_pr_create(title=title, body=pr_body, base=base_branch)
+        pr_out = gh_pr_create(
+            title=title,
+            body=pr_body,
+            base=base_branch,
+            cwd=workspace_root,
+            log_dir=LOG_DIR,
+        )
         print(f"PR: {pr_out}")
 
     manifest["result"] = "success"

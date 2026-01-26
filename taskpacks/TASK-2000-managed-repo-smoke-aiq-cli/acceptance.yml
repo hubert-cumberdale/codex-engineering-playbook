@@ -1,0 +1,14 @@
+version: 1
+
+deps: []
+
+format:
+  commands:
+    - python -m compileall -q .
+
+lint:
+  commands: []
+
+tests:
+  commands:
+    - PYTHONPATH=. python -m pytest -q
