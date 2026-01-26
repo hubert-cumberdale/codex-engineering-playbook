@@ -50,8 +50,8 @@ The following are **established and relied upon**:
     - CI enforcement of objective violations only
     - Versioned schema (v1)
 - **Evidence index**
-    - Read-only, deterministic index of `.orchestrator_logs`
-    - Schema v1 at `.orchestrator_logs/evidence_index.json`
+    - Read-only, deterministic index of `.orchestrator_logs` (or external evidence roots)
+    - Schema v1 at `.orchestrator_logs/evidence_index.json` (or `<evidence_dir>/evidence_index.json`)
 - **PR hygiene**
     - Stable branch naming
     - PR-exists guard (no spam)

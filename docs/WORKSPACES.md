@@ -46,16 +46,13 @@ The orchestrator resolves the workspace in this order:
 3) `task.yml: workspace`
 
 If none are set, the orchestrator fails fast with:
-“No workspace specified. Provide --workspace <name|path> or set workspace: in task.yml.”
+“No workspace specified. Provide --workspace <name|path> or workspace: in task.yml (or workspace: playbook for self).”
 
 If the value matches a registry name, that workspace entry is used.
 Otherwise the value is treated as a local path.
 
 To intentionally target the playbook repo, set `workspace: playbook` (or `workspace: self`)
 in `task.yml` or pass the same value via CLI or env.
-
-If none are set, the orchestrator fails fast with:
-“No workspace specified. Provide --workspace <name|path> or workspace: in task.yml (or workspace: playbook for self).”
 
 ---
 

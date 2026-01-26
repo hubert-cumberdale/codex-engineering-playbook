@@ -6,7 +6,8 @@ This release introduces gated support for v2 solution plugins within the Codex O
 ## Added
 - Optional execution of solution plugins via `ORCH_ENABLE_PLUGINS=1` / `--enable-plugins`.
 - v2 plugin runner integration with structured execution context.
-- Plugin execution results recorded in `.orchestrator_logs/manifest.json`.
+- Plugin execution results recorded in `.orchestrator_logs/<run_id>/manifest.json`
+  (or `<evidence_dir>/<run_id>/manifest.json` in external mode).
 - Normalized, portable artifact paths in plugin results.
 - Branch and PR safeguards to prevent duplicate PR creation.
 
