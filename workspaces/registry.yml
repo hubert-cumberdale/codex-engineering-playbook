@@ -9,6 +9,7 @@ defaults:
   evidence_mode: in_repo
   # If evidence_mode = external_dir, evidence_dir must be set per workspace.
   acceptance:
+    - ruff check src tests
     - python -m pytest -q
 
 workspaces:
@@ -17,6 +18,7 @@ workspaces:
     path: /home/noob/repos/aiq-cli
     evidence_mode: in_repo
     acceptance:
+      - ruff check src tests
       - python -m pytest -q
 
   # Example private repo profile (do not commit secrets).
@@ -27,4 +29,3 @@ workspaces:
   #   evidence_dir: /home/noob/dev/evidence/client-x
   #   acceptance:
   #     - python -m pytest -q
-
