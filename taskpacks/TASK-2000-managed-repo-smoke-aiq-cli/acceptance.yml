@@ -11,4 +11,4 @@ lint:
 
 tests:
   commands:
-    - PYTHONPATH=. python -m pytest -q
+    - PYTHONPATH=src python -m pytest -q
