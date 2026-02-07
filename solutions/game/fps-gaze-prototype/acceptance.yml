@@ -1,0 +1,94 @@
+version: 1
+
+deps: []
+
+# Stage-level pass/fail criteria (contractual).
+stages:
+  - id: stage-0
+    name: "Repository & Engine Bootstrap"
+    pass:
+      - "Unreal Engine 4.27 project exists under Game/ (or Unreal/) with a stable root path committed to the repo."
+      - "Project builds in a clean Windows environment using documented steps."
+      - "Evidence artifacts captured: engine version, project identifier, build output."
+    fail:
+      - "Project requires undocumented manual steps or external context."
+      - "Build output path is non-deterministic or missing."
+    evidence:
+      - "artifacts/stage-0/engine_version.txt"
+      - "artifacts/stage-0/project_id.txt"
+      - "artifacts/stage-0/build_output.log"
+      - "artifacts/stage-0/repro_steps.txt"
+
+  - id: stage-1
+    name: "Eye Tracking Provider Abstraction"
+    pass:
+      - "Tobii provider component exists behind a provider interface."
+      - "Null provider is active when eye tracking is unavailable."
+      - "Signals are normalized and gated by confidence before intent."
+      - "Provider emits a normalized sample struct with fields: gaze_x, gaze_y (0..1), confidence (0..1), present (bool), source (enum), timestamp (monotonic)."
+      - "No gameplay logic calls Tobii SDK directly."
+      - "Evidence artifacts captured: signal contract and runtime validation output."
+    fail:
+      - "Gameplay code reads raw gaze signals directly from SDK calls."
+      - "Null provider missing or disabled by default."
+    evidence:
+      - "artifacts/stage-1/signal_contract.md"
+      - "artifacts/stage-1/runtime_validation.log"
+      - "artifacts/stage-1/provider_status.json"
+
+  - id: stage-2
+    name: "Gameplay Intent Layer"
+    pass:
+      - "Intent resolution exists for aim target, interact target, and UI focus."
+      - "Intent layer has no gameplay effects."
+      - "Intent resolution is deterministic given a fixed scene + synthetic gaze trace fixtures."
+      - "Evidence artifacts captured: intent debug output or tests."
+    fail:
+      - "Gameplay effects occur inside the intent layer."
+    evidence:
+      - "artifacts/stage-2/intent_resolution.log"
+      - "artifacts/stage-2/intent_report.json"
+
+  - id: stage-3
+    name: "Gameplay Adapters"
+    pass:
+      - "Aim assist, interaction, UI, and camera adapters are present."
+      - "Adapters consume intent outputs only."
+      - "Before/after captures are expressed as numeric deltas or state transition logs, not prose."
+      - "Evidence artifacts captured: before/after behavior captures."
+    fail:
+      - "Adapters bypass intent outputs or read raw gaze data."
+    evidence:
+      - "artifacts/stage-3/aim_assist_metrics.json"
+      - "artifacts/stage-3/interaction_metrics.json"
+      - "artifacts/stage-3/ui_state_transitions.json"
+      - "artifacts/stage-3/camera_offset_metrics.json"
+
+  - id: stage-4
+    name: "Vertical Slice Assembly"
+    pass:
+      - "Arena map, targets, interactables, and HUD widgets exist."
+      - "All four gaze mechanics are active and gated by the provider toggle."
+      - "All mechanics have a non-eye-tracking control path (mouse/controller only) and remain playable with Null provider."
+      - "Evidence artifacts captured: playable slice checklist and validation outputs."
+    fail:
+      - "Any gaze mechanic requires eye tracking hardware to run."
+      - "HUD critical elements become inaccessible due to gaze zones."
+    evidence:
+      - "artifacts/stage-4/vertical_slice_checklist.txt"
+      - "artifacts/stage-4/validation_output.log"
+      - "artifacts/stage-4/toggle_matrix.json"
+
+format:
+  commands:
+    - python -m compileall -q .
+
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed solutions/game/fps-gaze-prototype
+    - python tools/acceptance/check_no_qualitative_language.py --path solutions/game/fps-gaze-prototype
+
+tests:
+  commands:
+    - PYTHONPATH=. python -m pytest -q
+    - python tools/acceptance/check_engine_declared_in_taskpack.py --task-yml solutions/game/fps-gaze-prototype/task.yml --spec solutions/game/fps-gaze-prototype/spec.md --artifact-path solutions/game/fps-gaze-prototype/artifacts

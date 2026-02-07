@@ -16,9 +16,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install uv
+        run: |
+          curl -Ls https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install Python deps
+        run: uv sync --dev
       - name: Run review checks
         run: |
-          python -m tools.review.run_review --mode strict --report-path review_report.json
+          uv run python -m tools.review.run_review --mode strict --report-path review_report.json
       - name: Upload review report
         if: always()
         uses: actions/upload-artifact@v4

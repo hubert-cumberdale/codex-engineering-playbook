@@ -1,0 +1,43 @@
+version: 1
+id: TASK-FPS-GAZE-PROTOTYPE
+title: "FPS Gaze Prototype (Unreal 4.27)"
+type: game
+
+task:
+  name: "Bootstrap Unreal FPS gaze prototype Task Pack"
+  pillar: game
+  description: >
+    Define a staged, deterministic Task Pack to bootstrap a greenfield Unreal Engine
+    FPS prototype with optional Tobii eye tracking and a playable vertical slice.
+
+engine:
+  name: "Unreal Engine"
+  version: "4.27"
+  target: "Windows PC"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+acceptance:
+  must:
+    - "Stage-level pass/fail criteria declared in acceptance.yml."
+    - "Eye tracking is optional at runtime with null provider fallback."
+    - "Gaze signals pass through filter and intent layers before gameplay."
+    - "No direct gameplay logic depends on Tobii SDK calls."
+    - "Repo is buildable by a new agent using runbook.md."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 20
+
+artifacts:
+  required:
+    - solutions/game/fps-gaze-prototype/artifacts/**
+
+review:
+  required: true
+  notes: >
+    Confirm staged boundaries, deterministic evidence, and eye tracking optionality.

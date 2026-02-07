@@ -55,7 +55,7 @@ Run a taskpack locally:
 ```bash
 TASKPACK_PATH=taskpacks/TASK-0102-orchestrator-plugin-arch \
 RUN_CODEX_SMOKE=false \
-python tools/orchestrator/orchestrate.py
+uv run python tools/orchestrator/orchestrate.py
 ```
 
 Enable plugins:
@@ -65,7 +65,7 @@ ORCH_BRANCH_NAME=codex/task-0102 \
 ORCH_ENABLE_PLUGINS=1 \
 TASKPACK_PATH=taskpacks/TASK-0102-orchestrator-plugin-arch \
 RUN_CODEX_SMOKE=false \
-python tools/orchestrator/orchestrate.py
+uv run python tools/orchestrator/orchestrate.py
 ```
 
 Artifacts live in `.orchestrator_logs/`

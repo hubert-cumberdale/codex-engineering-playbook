@@ -18,15 +18,15 @@ defaults:
   kind: local_path
   evidence_mode: in_repo
   acceptance:
-    - python -m pytest -q
+    - uv run pytest -q
 
 workspaces:
   aiq-cli:
     kind: local_path
-    path: /abs/path/to/aiq-cli
-    evidence_mode: in_repo
-    acceptance:
-      - python -m pytest -q
+  path: /abs/path/to/aiq-cli
+  evidence_mode: in_repo
+  acceptance:
+      - uv run pytest -q
 ```
 
 Rules:
@@ -76,14 +76,14 @@ Run a managed workspace by registry name:
 ```bash
 TASKPACK_PATH=taskpacks/TASK-2000-managed-repo-smoke-aiq-cli \
 ORCH_WORKSPACE=aiq-cli \
-python tools/orchestrator/orchestrate.py
+uv run python tools/orchestrator/orchestrate.py
 ```
 
 Run by path (no registry entry):
 ```bash
 TASKPACK_PATH=taskpacks/TASK-2000-managed-repo-smoke-aiq-cli \
 ORCH_WORKSPACE=/abs/path/to/aiq-cli \
-python tools/orchestrator/orchestrate.py
+uv run python tools/orchestrator/orchestrate.py
 ```
 
 `workspace: playbook` targets the orchestrator repository itself (use sparingly; prefer explicit external workspaces for managed repos).

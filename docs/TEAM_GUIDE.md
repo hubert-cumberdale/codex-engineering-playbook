@@ -4,8 +4,9 @@
 > Authoritative system behavior and guarantees are defined under `/docs`.
 
 ## Commands
-- Tests: `python -m pytest -q`
-- Deterministic review (advisory): `PYTHONPATH=. python -m tools.review.run_review --mode advisory --report-path review_report.json`
+- Setup (uv): `uv sync --dev`
+- Tests: `uv run pytest -q`
+- Deterministic review (advisory): `PYTHONPATH=. uv run python -m tools.review.run_review --mode advisory --report-path review_report.json`
 - Install pre-push review hook (opt-in): `./scripts/install-pre-push-hook.sh`
 
 ## Conventions
