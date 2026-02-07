@@ -19,9 +19,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: |
-          python -m pip install --upgrade pip
-          pip install PyYAML==6.0.2
+      - name: Install uv
+        run: |
+          curl -Ls https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Python deps
+        run: uv sync --dev
 
       - name: Validate changed taskpacks
         run: |
@@ -36,6 +40,5 @@ jobs:
 
           for f in $changed; do
             d=$(dirname "$f")
-            python tools/orchestrator/validate_taskpack.py "$d"
+            uv run python tools/orchestrator/validate_taskpack.py "$d"
           done
-

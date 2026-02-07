@@ -58,13 +58,19 @@ These skills describe how to work _within_ the system safely and correctly.
 - `orch-review-report-schema`  
     Understanding the versioned review report schema and required fields.
     
+- `orch-evidence-index-builder`  
+    Building the deterministic evidence index from `.orchestrator_logs`.
+    
+- `orch-evidence-index-query`  
+    Querying the evidence index with stable, read-only commands.
+    
 - `orch-plugin-authoring` _(optional)_  
     Writing solution plugins that remain gated, stateless, and contract-subordinate.
     
 - `orch-pr-hygiene-and-release-notes`  
     Branching, commits, PR structure, and evidence attachment.
 
-These review skills are non-AI, offline, and deterministic; they do not include heuristic or semantic analysis.
+These review and evidence skills are non-AI, offline, and deterministic; they do not include heuristic or semantic analysis.
     
 
 ---

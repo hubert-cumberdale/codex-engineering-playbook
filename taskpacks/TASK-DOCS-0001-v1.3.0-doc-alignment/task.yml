@@ -1,0 +1,19 @@
+id: "TASK-DOCS-0001"
+title: "v1.3.0 documentation alignment"
+owner: "platform"
+priority: "P2"
+type: "docs"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+
+acceptance:
+  must:
+    - "Docs reflect v1.3.0 review and evidence indexing capabilities"
+    - "No aspirational or future-facing language added"
+    - "No runtime behavior changes"
+
+skills:
+  prefer:
+    - "python-cli-standard"

@@ -1,0 +1,30 @@
+id: TASK-2001-aiq-cli-results-view-modes
+title: aiq-cli TUI — Results View Modes (Summaries/Phases/Logs)
+version: 1
+
+workspace: aiq-cli
+
+constraints:
+  read_only: true
+  no_secrets_output: true
+
+scope:
+  allowed_paths:
+    - src/attackiq_cli/tui.py
+    - src/attackiq_cli/
+    - tests/
+    - docs/
+
+docs:
+  required:
+    - docs/UX_MODEL.md
+    - docs/GOVERNANCE.md
+    - docs/CURRENT_WORK.md
+
+acceptance:
+  commands:
+    - python -m pytest -q
+
+evidence:
+  mode: inherit
+

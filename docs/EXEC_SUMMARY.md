@@ -1,4 +1,4 @@
-# Codex Orchestrator — Executive Summary (v1.0.0)
+# Codex Orchestrator — Executive Summary (v1.3.0)
 
 ## What This Is
 Codex Orchestrator is a fault-tolerant engineering system where **ChatGPT operates as the control plane** and **Codex (CLI + GitHub + Actions) operates as the execution plane**.
@@ -74,12 +74,13 @@ Each orchestrator run produces:
 - A manifest
 - Phase logs
 - A human-readable summary
+ - Optional deterministic evidence artifacts (review report and evidence index)
 
 Success and failure are equally auditable.
 
 ---
 
-## Scope of v1.0.0
+## Scope of v1.3.0
 v1 provides:
 - Stable execution pipeline
 - Task Pack schema
@@ -87,6 +88,8 @@ v1 provides:
 - Circuit breakers
 - Evidence guarantees
 - Solution-agnostic architecture with solution plugins living under /solutions (e.g., security/web/game)
+- Deterministic review runner (schema v1)
+- Evidence index builder + query CLI (schema v1)
 
 v1 explicitly does **not** include:
 - Long-lived agents
@@ -109,6 +112,6 @@ This is infrastructure for *serious* engineering work.
 ---
 
 ## Status
-**v1.0.0 is production-stable and contract-locked.**
+**v1.3.0 is production-stable and contract-locked.**
 
 All future expansion must respect the v1 guarantees.

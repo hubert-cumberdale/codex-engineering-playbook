@@ -1,0 +1,45 @@
+version: 1
+id: TASK-2000-managed-repo-smoke-aiq-cli
+title: "Managed repo smoke: aiq-cli"
+type: managed_repo
+
+workspace: aiq-cli
+
+task:
+  name: "TASK-2000: Managed repo smoke for aiq-cli"
+  pillar: managed_repo
+  description: >
+    Smoke-test managed workspace execution against the aiq-cli repository.
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+scope:
+  allowed_paths:
+    - docs/
+
+docs:
+  required:
+    - docs/UX_MODEL.md
+    - docs/GOVERNANCE.md
+
+acceptance:
+  file: acceptance.yml
+  must:
+    - "Acceptance runs pytest (or a lightweight command) in the workspace root."
+    - "Changes are limited to docs/ within the managed repo."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 10
+
+artifacts:
+  optional:
+    - artifacts/**
+
+review:
+  required: true
+  notes: "Smoke taskpack for managed workspace execution; no behavior changes expected."
