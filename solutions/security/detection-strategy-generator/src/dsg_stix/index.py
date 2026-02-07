@@ -27,14 +27,22 @@ def extract_relationships(objects: list[StixObject]) -> list[Relationship]:
         rtype = raw.get("relationship_type")
         src = raw.get("source_ref")
         tgt = raw.get("target_ref")
-        if all(isinstance(x, str) for x in (rid, rtype, src, tgt)):
-            rels.append(Relationship(
+        if not (
+            isinstance(rid, str)
+            and isinstance(rtype, str)
+            and isinstance(src, str)
+            and isinstance(tgt, str)
+        ):
+            continue
+        rels.append(
+            Relationship(
                 id=rid,
                 relationship_type=rtype,
                 source_ref=src,
                 target_ref=tgt,
                 raw=dict(raw),
-            ))
+            )
+        )
     rels.sort(key=lambda r: (r.relationship_type, r.source_ref, r.target_ref, r.id))
     return rels
 

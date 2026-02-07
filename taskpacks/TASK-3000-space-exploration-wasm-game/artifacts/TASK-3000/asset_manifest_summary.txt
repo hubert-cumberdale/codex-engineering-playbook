@@ -1,0 +1,5 @@
+NASA imagery manifest summary (placeholder)
+
+- Sources are public-domain NASA datasets.
+- Files are stored offline in the repository and referenced by a manifest.
+- Runtime network fetches are not permitted.

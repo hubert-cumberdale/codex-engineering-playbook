@@ -1,0 +1,44 @@
+version: 1
+id: TASK-3000
+title: "Space exploration WASM mobile game"
+type: game
+
+task:
+  name: "TASK-3000: Build a space exploration mobile game in WebAssembly"
+  pillar: game
+  description: >
+    Define and implement a first-person space exploration game targeting
+    mobile browsers via a WebAssembly build, with deterministic headless
+    validation and offline NASA imagery ingestion.
+
+engine:
+  name: "Godot"
+  version: "4.2.2-stable"
+  target: "Web (WebAssembly)"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+acceptance:
+  must:
+    - "Acceptance commands run via acceptance.yml (format/lint/tests)."
+    - "Deterministic, non-interactive build and simulation checks."
+    - "WebAssembly build artifact is produced in a stable path."
+    - "Engine/version intent is explicitly declared."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 20
+
+artifacts:
+  required:
+    - artifacts/TASK-3000/**
+
+review:
+  required: true
+  notes: >
+    Ensure deterministic validation, offline imagery ingestion, and
+    reproducible WebAssembly build outputs.

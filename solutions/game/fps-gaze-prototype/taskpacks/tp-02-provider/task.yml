@@ -1,0 +1,43 @@
+version: 1
+id: TP-02-PROVIDER
+title: "Stage-1 Eye Tracking Provider Abstraction"
+type: game
+
+task:
+  name: "Implement Stage-1 provider abstraction only"
+  pillar: game
+  description: >
+    Implement Stage-1 provider abstraction for optional eye tracking in Unreal,
+    with Blueprint-accessible normalized samples, confidence gating, deterministic
+    validation artifacts, and strict stage boundary controls.
+
+engine:
+  name: "Unreal Engine"
+  version: "4.27"
+  target: "Windows PC"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+acceptance:
+  must:
+    - "Stage-1 scope only: provider abstraction, runtime toggle, normalization, confidence gating, deterministic evidence."
+    - "No intent resolution or gameplay adapter implementation."
+    - "No gameplay module direct Tobii SDK calls."
+    - "Null provider is default-safe and active when eye tracking is unavailable."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 20
+
+artifacts:
+  required:
+    - solutions/game/fps-gaze-prototype/artifacts/stage-1/**
+
+review:
+  required: true
+  notes: >
+    Verify Stage-1 boundaries, deterministic outputs, and optional hardware behavior.

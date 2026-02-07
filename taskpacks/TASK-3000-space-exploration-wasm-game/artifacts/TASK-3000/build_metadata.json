@@ -1,0 +1,6 @@
+{
+  "engine": "Godot",
+  "engine_version": "4.2.2-stable",
+  "target": "WebAssembly",
+  "build_profile": "placeholder"
+}

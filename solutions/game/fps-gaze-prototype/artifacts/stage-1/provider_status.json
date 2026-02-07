@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "provider": "Tobii",
+  "representative_gated_sample": {
+    "confidence": 0.0,
+    "gaze_x": 0.0,
+    "gaze_y": 0.0,
+    "present": false,
+    "source": "Null",
+    "timestamp": 1000.0
+  },
+  "sample_shape": {
+    "confidence": "float(0..1)",
+    "gaze_x": "float(0..1)",
+    "gaze_y": "float(0..1)",
+    "present": "bool",
+    "source": "enum(Tobii|Null)",
+    "timestamp": "monotonic"
+  },
+  "schema_version": "stage-1.v1",
+  "source": "Null",
+  "threshold": 0.6
+}

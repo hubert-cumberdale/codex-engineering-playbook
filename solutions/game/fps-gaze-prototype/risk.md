@@ -3,7 +3,7 @@
 ## Eye Tracking Availability Risk
 - Risk: Tobii runtime or device is unavailable on some systems.
 - Impact: Gaze features fail or block gameplay.
-- Mitigation: Null provider fallback is default; all gameplay remains functional without eye tracking.
+- Mitigation: Null provider fallback is default; all gameplay remains operational without eye tracking.
 - Evidence: Stage 1 runtime validation shows provider switching.
 
 ## Plugin / Engine Version Drift

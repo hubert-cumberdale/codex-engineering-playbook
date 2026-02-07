@@ -6,7 +6,7 @@ import datetime as dt
 import json
 import sys
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Any, Callable, Iterable
 
 TIER1_FILES = [
     "docs/System Overview.md",
@@ -64,14 +64,14 @@ def build_violation(
     severity: str,
     message: str,
     path: str,
-    details: dict[str, object] | None = None,
-) -> dict[str, object]:
+    details: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if category not in ALLOWED_CATEGORIES:
         raise ValueError(f"unknown violation category: {category}")
     if severity not in ALLOWED_SEVERITIES:
         raise ValueError(f"unknown violation severity: {severity}")
 
-    violation: dict[str, object] = {
+    violation: dict[str, Any] = {
         "id": violation_id,
         "category": category,
         "severity": severity,
@@ -184,7 +184,7 @@ CHECKS: list[Callable[[Path], list[dict[str, object]]]] = [
 ]
 
 
-def generate_report(root: Path, mode: str) -> dict[str, object]:
+def generate_report(root: Path, mode: str) -> dict[str, Any]:
     violations: list[dict[str, object]] = []
     for check in CHECKS:
         violations.extend(check(root))
@@ -192,7 +192,7 @@ def generate_report(root: Path, mode: str) -> dict[str, object]:
     sorted_violations = sort_violations(violations)
     status = "pass" if not sorted_violations else "fail"
 
-    report = {
+    report: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": rfc3339_utc_now(),
         "tool": {"name": TOOL_NAME, "version": TOOL_VERSION},
@@ -208,7 +208,7 @@ def generate_report(root: Path, mode: str) -> dict[str, object]:
     return report
 
 
-def serialize_report(report: dict[str, object]) -> str:
+def serialize_report(report: dict[str, Any]) -> str:
     return json.dumps(report, indent=2, sort_keys=True)
 
 
@@ -222,7 +222,7 @@ def run_review(root: Path, mode: str, report_path: Path) -> int:
     report_text = serialize_report(report)
     write_report(report_text, report_path)
 
-    violations = report["summary"]["violations"]
+    violations = int(report["summary"]["violations"])
     print(f"review: mode={mode} violations={violations} report={report_path.as_posix()}")
     return 2 if violations else 0
 

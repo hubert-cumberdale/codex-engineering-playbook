@@ -23,11 +23,12 @@ class WorkspaceConfig:
 
 def evidence_paths(workspace: WorkspaceConfig, *, run_id: str) -> tuple[Path, Path]:
     if workspace.evidence_mode == "in_repo":
-        evidence_root = workspace.root / ".orchestrator_logs"
+        evidence_root: Optional[Path] = workspace.root / ".orchestrator_logs"
     else:
         evidence_root = workspace.evidence_dir
     if evidence_root is None:
         raise WorkspaceRegistryError("Evidence directory required for external_dir mode.")
+    assert isinstance(evidence_root, Path)
     evidence_root = evidence_root.resolve()
     return evidence_root, evidence_root / run_id
 
@@ -85,8 +86,7 @@ def load_workspace_registry(path: Path) -> Dict[str, Any]:
         kind = entry.get("kind", defaults_kind)
         if kind != "local_path":
             _fail(f"workspace.{name}.kind must be local_path")
-        path_value = entry.get("path")
-        _require_str(path_value, label=f"workspace.{name}.path")
+        path_value = _require_str(entry.get("path"), label=f"workspace.{name}.path")
         path = Path(path_value)
         if not path.is_absolute():
             _fail(f"workspace.{name}.path must be absolute")
@@ -96,7 +96,7 @@ def load_workspace_registry(path: Path) -> Dict[str, Any]:
             _fail(f"workspace.{name}.evidence_mode must be in_repo or external_dir")
         evidence_dir = entry.get("evidence_dir")
         if evidence_mode == "external_dir":
-            _require_str(evidence_dir, label=f"workspace.{name}.evidence_dir")
+            evidence_dir = _require_str(evidence_dir, label=f"workspace.{name}.evidence_dir")
             if not Path(evidence_dir).is_absolute():
                 _fail(f"workspace.{name}.evidence_dir must be absolute")
 
@@ -111,11 +111,11 @@ def resolve_workspace(
     registry_path: Path,
     default_root: Path,
 ) -> WorkspaceConfig:
-    registry = None
+    registry: Optional[Dict[str, Any]] = None
     if registry_path.exists():
         registry = load_workspace_registry(registry_path)
 
-    defaults = {}
+    defaults: Dict[str, Any] = {}
     if registry:
         defaults = registry.get("defaults", {}) or {}
 
@@ -124,6 +124,7 @@ def resolve_workspace(
             "No workspace specified. Provide --workspace <name|path> or "
             "workspace: in task.yml (or workspace: playbook for self)."
         )
+    assert isinstance(spec, str)
 
     if spec in ("playbook", "self"):
         return WorkspaceConfig(
@@ -139,15 +140,16 @@ def resolve_workspace(
         workspaces = registry.get("workspaces", {}) or {}
         if spec in workspaces:
             entry = workspaces[spec] or {}
-            root = Path(str(entry.get("path"))).expanduser().resolve()
+            path_value = _require_str(entry.get("path"), label=f"workspace.{spec}.path")
+            root = Path(path_value).expanduser().resolve()
             if not root.exists():
                 _fail(f"workspace.{spec}.path does not exist: {root}")
             evidence_mode = str(entry.get("evidence_mode", defaults.get("evidence_mode", "in_repo")))
             evidence_dir = entry.get("evidence_dir")
-            evidence_dir_path = (
+            evidence_dir_path_local = (
                 Path(str(evidence_dir)).expanduser().resolve() if evidence_dir else None
             )
-            if evidence_mode == "external_dir" and not evidence_dir_path:
+            if evidence_mode == "external_dir" and not evidence_dir_path_local:
                 _fail(f"workspace.{spec}.evidence_dir required for external_dir mode")
             acceptance = entry.get("acceptance", defaults.get("acceptance", [])) or []
             return WorkspaceConfig(
@@ -155,7 +157,7 @@ def resolve_workspace(
                 root=root,
                 kind=str(entry.get("kind", defaults.get("kind", "local_path"))),
                 evidence_mode=evidence_mode,
-                evidence_dir=evidence_dir_path,
+                evidence_dir=evidence_dir_path_local,
                 acceptance=list(acceptance),
             )
 
@@ -164,8 +166,10 @@ def resolve_workspace(
     if not root.exists():
         _fail(f"workspace path does not exist: {root}")
     evidence_mode = str(defaults.get("evidence_mode", "in_repo"))
-    evidence_dir = defaults.get("evidence_dir")
-    evidence_dir_path = Path(str(evidence_dir)).expanduser().resolve() if evidence_dir else None
+    evidence_dir_value = defaults.get("evidence_dir")
+    evidence_dir_path: Optional[Path] = None
+    if isinstance(evidence_dir_value, str) and evidence_dir_value.strip():
+        evidence_dir_path = Path(evidence_dir_value).expanduser().resolve()
     if evidence_mode == "external_dir" and not evidence_dir_path:
         _fail("workspace default evidence_dir required for external_dir mode")
 

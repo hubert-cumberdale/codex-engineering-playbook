@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import Any
 
-from .index import extract_relationships, index_by_id, wrap_objects
-from .models import ExtractionResult, Relationship, StixObject
+from .index import extract_relationships, wrap_objects
+from .models import ExtractionResult
 
 DEFAULT_DETECTION_STRATEGY_TYPES = ("x-mitre-detection-strategy",)
 DEFAULT_ANALYTIC_TYPES = ("x-mitre-analytic",)
@@ -28,7 +27,6 @@ def extract_stage1(
 ) -> ExtractionResult:
     objects = wrap_objects(bundle_obj)
     rels = extract_relationships(objects)
-    by_id = index_by_id(objects)
 
     ds = tuple(o for o in objects if o.type in detection_strategy_types)
     an = tuple(o for o in objects if o.type in analytic_types)
