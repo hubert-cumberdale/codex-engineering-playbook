@@ -1,0 +1,223 @@
+{
+  "schema_version": "stage2.intent_resolution_fixtures.v1",
+  "fixtures_sha256": "sha256:17cd482c08698e6fa58bfc7f9b134a330852619ddb08aac107d78f377068a21f",
+  "resolver_config": {
+    "confidence_min_q": 60
+  },
+  "scene": {
+    "targets": [
+      {
+        "id": "enemy.alpha",
+        "types": ["aimable", "interactable"],
+        "screen_region": {"min_x": 0.4, "min_y": 0.2, "max_x": 0.7, "max_y": 0.5},
+        "priority": 30,
+        "tags": ["enemy", "center"]
+      },
+      {
+        "id": "enemy.bravo",
+        "types": ["aimable"],
+        "screen_region": {"min_x": 0.4, "min_y": 0.2, "max_x": 0.7, "max_y": 0.5},
+        "priority": 30,
+        "tags": ["enemy", "overlap"]
+      },
+      {
+        "id": "pickup.beta",
+        "types": ["interactable"],
+        "screen_region": {"min_x": 0.6, "min_y": 0.52, "max_x": 0.82, "max_y": 0.76},
+        "priority": 20,
+        "tags": ["pickup"]
+      },
+      {
+        "id": "ui.console_panel",
+        "types": ["ui"],
+        "screen_region": {"min_x": 0.75, "min_y": 0.02, "max_x": 0.95, "max_y": 0.18},
+        "priority": 25,
+        "tags": ["hud", "panel"]
+      }
+    ],
+    "ui_zones": [
+      {
+        "name": "HUD.NavBar",
+        "screen_region": {"min_x": 0.0, "min_y": 0.0, "max_x": 1.0, "max_y": 0.15}
+      },
+      {
+        "name": "HUD.CenterReticle",
+        "screen_region": {"min_x": 0.35, "min_y": 0.2, "max_x": 0.65, "max_y": 0.6}
+      },
+      {
+        "name": "HUD.InventoryStrip",
+        "screen_region": {"min_x": 0.55, "min_y": 0.5, "max_x": 0.95, "max_y": 0.85}
+      }
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "s01_low_confidence",
+      "enabled": true,
+      "present": true,
+      "provider_kind": "Tobii",
+      "stage1_provider_snapshot": {
+        "confidence": 0.45,
+        "gaze_x": 0.5,
+        "gaze_y": 0.3,
+        "present": true,
+        "source": "Tobii",
+        "timestamp": 1000.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": null,
+        "reason_code": "suppressed_low_confidence",
+        "tie_break": "suppressed"
+      }
+    },
+    {
+      "case_id": "s02_provider_null",
+      "enabled": true,
+      "present": true,
+      "provider_kind": "Null",
+      "stage1_provider_snapshot": {
+        "confidence": 0.99,
+        "gaze_x": 0.5,
+        "gaze_y": 0.3,
+        "present": true,
+        "source": "Null",
+        "timestamp": 1001.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": null,
+        "reason_code": "suppressed_provider_null",
+        "tie_break": "suppressed"
+      }
+    },
+    {
+      "case_id": "s03_overlap_tie_break",
+      "enabled": true,
+      "present": true,
+      "provider_kind": "Tobii",
+      "stage1_provider_snapshot": {
+        "confidence": 0.95,
+        "gaze_x": 0.5,
+        "gaze_y": 0.3,
+        "present": true,
+        "source": "Tobii",
+        "timestamp": 1002.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": "HUD.CenterReticle",
+        "reason_code": "resolved",
+        "tie_break": "priority_desc_id_asc"
+      }
+    },
+    {
+      "case_id": "s04_no_hit",
+      "enabled": true,
+      "present": true,
+      "provider_kind": "Tobii",
+      "stage1_provider_snapshot": {
+        "confidence": 0.92,
+        "gaze_x": 0.05,
+        "gaze_y": 0.95,
+        "present": true,
+        "source": "Tobii",
+        "timestamp": 1003.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": null,
+        "reason_code": "no_candidate",
+        "tie_break": "priority_desc_id_asc"
+      }
+    },
+    {
+      "case_id": "s05_ui_target",
+      "enabled": true,
+      "present": true,
+      "provider_kind": "Tobii",
+      "stage1_provider_snapshot": {
+        "confidence": 0.99,
+        "gaze_x": 0.8,
+        "gaze_y": 0.1,
+        "present": true,
+        "source": "Tobii",
+        "timestamp": 1004.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": "HUD.NavBar",
+        "reason_code": "resolved",
+        "tie_break": "priority_desc_id_asc"
+      }
+    },
+    {
+      "case_id": "s06_disabled",
+      "enabled": false,
+      "present": true,
+      "provider_kind": "Tobii",
+      "stage1_provider_snapshot": {
+        "confidence": 0.99,
+        "gaze_x": 0.8,
+        "gaze_y": 0.1,
+        "present": true,
+        "source": "Tobii",
+        "timestamp": 1005.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": null,
+        "reason_code": "suppressed_disabled",
+        "tie_break": "suppressed"
+      }
+    },
+    {
+      "case_id": "s07_not_present",
+      "enabled": true,
+      "present": false,
+      "provider_kind": "Tobii",
+      "stage1_provider_snapshot": {
+        "confidence": 0.99,
+        "gaze_x": 0.8,
+        "gaze_y": 0.1,
+        "present": false,
+        "source": "Tobii",
+        "timestamp": 1006.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": null,
+        "reason_code": "suppressed_not_present",
+        "tie_break": "suppressed"
+      }
+    },
+    {
+      "case_id": "s08_interact_pickup",
+      "enabled": true,
+      "present": true,
+      "provider_kind": "Tobii",
+      "stage1_provider_snapshot": {
+        "confidence": 0.88,
+        "gaze_x": 0.7,
+        "gaze_y": 0.6,
+        "present": true,
+        "source": "Tobii",
+        "timestamp": 1007.0
+      },
+      "expect": {
+        "aim_intent_target_id": null,
+        "interact_intent_target_id": null,
+        "ui_focus_zone_id": "HUD.InventoryStrip",
+        "reason_code": "resolved",
+        "tie_break": "priority_desc_id_asc"
+      }
+    }
+  ]
+}

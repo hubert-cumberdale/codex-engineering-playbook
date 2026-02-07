@@ -1,0 +1,41 @@
+version: 1
+deps:
+  - ../../acceptance.yml
+
+stage:
+  id: stage-2
+  name: "Gameplay Intent Layer"
+
+pass:
+  - "Intent resolution exists for AimIntentTarget, InteractIntentTarget, and UIFocusZone."
+  - "Intent resolution uses deterministic fixture inputs with stable tie-break behavior."
+  - "If enabled/present/confidence/provider gating suppresses input, all intent outputs are explicit null."
+  - "No gameplay effects, UI behavior changes, adapter classes, or map/content work are introduced."
+  - "Stage-2 evidence artifacts are generated deterministically."
+
+fail:
+  - "Any Stage-3/4 mechanics or adapter references appear in Stage-2 implementation scope."
+  - "Any Content/ or Maps/ changes are present in the diff."
+  - "Artifacts include raw gaze streams or repeated coordinate logging."
+
+evidence:
+  - "../../artifacts/stage-2/intent_resolution.log"
+  - "../../artifacts/stage-2/intent_report.json"
+
+format:
+  commands:
+    - python -m compileall -q solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent/tools
+
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed solutions/game/fps-gaze-prototype
+    - python tools/acceptance/check_no_qualitative_language.py --path solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent
+    - python solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent/tools/check_stage2_boundaries.py
+
+tests:
+  commands:
+    - python solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent/tools/generate_stage2_artifacts.py
+    - python tools/acceptance/check_artifacts_present.py --path solutions/game/fps-gaze-prototype/artifacts/stage-2
+    - python tools/acceptance/check_artifact_contains_any.py --path solutions/game/fps-gaze-prototype/artifacts/stage-2 --any deterministic tie_break null_intent stage-2
+    - python solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent/tools/check_stage2_artifacts.py
+    - python tools/acceptance/check_engine_declared_in_taskpack.py --task-yml solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent/task.yml --spec solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent/design.md --artifact-path solutions/game/fps-gaze-prototype/artifacts/stage-2

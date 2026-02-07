@@ -1,0 +1,44 @@
+version: 1
+id: TP-03-INTENT
+title: "Stage-2 Gameplay Intent Layer"
+type: game
+
+task:
+  name: "Implement Stage-2 gameplay intent layer only"
+  pillar: game
+  description: >
+    Implement deterministic intent resolution for aim, interaction, and UI focus
+    from normalized and confidence-gated gaze samples. Generate reproducible
+    Stage-2 artifacts with no gameplay effects and no Stage-3/4 adapter work.
+
+engine:
+  name: "Unreal Engine"
+  version: "4.27"
+  target: "Windows PC"
+
+constraints:
+  allow_network: false
+  allow_cloud_mutations: false
+  allow_secrets: false
+  allow_long_running: false
+
+acceptance:
+  must:
+    - "Stage-2 scope only: deterministic intent outputs and evidence artifacts."
+    - "Intent layer has no gameplay effects, no adapters, and no UI/map behavior changes."
+    - "Resolver consumes normalized/gated sample semantics and deterministic fixtures."
+    - "Boundary checks fail on Stage-3/4 mechanic creep and Content/Maps changes."
+
+execution:
+  use_plugins: false
+  timeout_minutes: 20
+
+artifacts:
+  required:
+    - solutions/game/fps-gaze-prototype/artifacts/stage-2/**
+
+review:
+  required: true
+  notes: >
+    Verify deterministic resolver behavior, explicit null semantics under gating,
+    and strict stage-boundary enforcement.
