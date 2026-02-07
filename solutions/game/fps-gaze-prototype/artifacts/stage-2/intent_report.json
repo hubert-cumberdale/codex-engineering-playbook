@@ -1,0 +1,112 @@
+{
+  "all_expected_matched": true,
+  "case_count": 8,
+  "deterministic": true,
+  "fixtures_sha256": "sha256:17cd482c08698e6fa58bfc7f9b134a330852619ddb08aac107d78f377068a21f",
+  "inputs": {
+    "fixtures_sha256": "sha256:17cd482c08698e6fa58bfc7f9b134a330852619ddb08aac107d78f377068a21f"
+  },
+  "resolution_rules": {
+    "input_gating": "enabled && provider_kind!=Null && present && confidence>=threshold",
+    "null_intent_on_suppression": true,
+    "tie_break": "priority_desc_then_id_asc"
+  },
+  "rows": [
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s01_low_confidence",
+      "expected_match": true,
+      "gating": "suppressed",
+      "interact_intent_target_id": null,
+      "reason_code": "suppressed_low_confidence",
+      "tie_break": "suppressed",
+      "ui_focus_zone_id": null
+    },
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s02_provider_null",
+      "expected_match": true,
+      "gating": "suppressed",
+      "interact_intent_target_id": null,
+      "reason_code": "suppressed_provider_null",
+      "tie_break": "suppressed",
+      "ui_focus_zone_id": null
+    },
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s03_overlap_tie_break",
+      "expected_match": true,
+      "gating": "pass",
+      "interact_intent_target_id": null,
+      "reason_code": "resolved",
+      "tie_break": "priority_desc_id_asc",
+      "ui_focus_zone_id": "HUD.CenterReticle"
+    },
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s04_no_hit",
+      "expected_match": true,
+      "gating": "pass",
+      "interact_intent_target_id": null,
+      "reason_code": "no_candidate",
+      "tie_break": "priority_desc_id_asc",
+      "ui_focus_zone_id": null
+    },
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s05_ui_target",
+      "expected_match": true,
+      "gating": "pass",
+      "interact_intent_target_id": null,
+      "reason_code": "resolved",
+      "tie_break": "priority_desc_id_asc",
+      "ui_focus_zone_id": "HUD.NavBar"
+    },
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s06_disabled",
+      "expected_match": true,
+      "gating": "suppressed",
+      "interact_intent_target_id": null,
+      "reason_code": "suppressed_disabled",
+      "tie_break": "suppressed",
+      "ui_focus_zone_id": null
+    },
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s07_not_present",
+      "expected_match": true,
+      "gating": "suppressed",
+      "interact_intent_target_id": null,
+      "reason_code": "suppressed_not_present",
+      "tie_break": "suppressed",
+      "ui_focus_zone_id": null
+    },
+    {
+      "aim_intent_target_id": null,
+      "case_id": "s08_interact_pickup",
+      "expected_match": true,
+      "gating": "pass",
+      "interact_intent_target_id": null,
+      "reason_code": "resolved",
+      "tie_break": "priority_desc_id_asc",
+      "ui_focus_zone_id": "HUD.InventoryStrip"
+    }
+  ],
+  "scene_summary": {
+    "target_ids": [
+      "enemy.alpha",
+      "enemy.bravo",
+      "pickup.beta",
+      "ui.console_panel"
+    ],
+    "ui_zone_names": [
+      "HUD.NavBar",
+      "HUD.CenterReticle",
+      "HUD.InventoryStrip"
+    ]
+  },
+  "schema_version": "stage2.intent_resolution_fixtures.v1",
+  "stage": "stage-2",
+  "stage1_snapshot_schema_fingerprint": "sha256:7d5c759f01565370813e988b3a42931f7fd96005186c6eb52cbf9dbf16b25275"
+}

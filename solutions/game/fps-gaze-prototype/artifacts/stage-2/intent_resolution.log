@@ -1,0 +1,12 @@
+stage-2 intent_resolution deterministic
+fixture=/home/noob/codex-engineering-playbook/solutions/game/fps-gaze-prototype/taskpacks/tp-03-intent/fixtures/intent_resolution_fixtures.json
+tie_break=priority_desc_then_id_asc
+null_intent=true
+case=s01_low_confidence gating=suppressed aim=null interact=null ui_focus=null reason_code=suppressed_low_confidence expected_match=true
+case=s02_provider_null gating=suppressed aim=null interact=null ui_focus=null reason_code=suppressed_provider_null expected_match=true
+case=s03_overlap_tie_break gating=pass aim=null interact=null ui_focus=HUD.CenterReticle reason_code=resolved expected_match=true
+case=s04_no_hit gating=pass aim=null interact=null ui_focus=null reason_code=no_candidate expected_match=true
+case=s05_ui_target gating=pass aim=null interact=null ui_focus=HUD.NavBar reason_code=resolved expected_match=true
+case=s06_disabled gating=suppressed aim=null interact=null ui_focus=null reason_code=suppressed_disabled expected_match=true
+case=s07_not_present gating=suppressed aim=null interact=null ui_focus=null reason_code=suppressed_not_present expected_match=true
+case=s08_interact_pickup gating=pass aim=null interact=null ui_focus=HUD.InventoryStrip reason_code=resolved expected_match=true
