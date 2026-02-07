@@ -1,0 +1,5 @@
+TASK-3000 evidence contract
+
+- Deterministic, headless validation is required for the flight simulation.
+- WebAssembly export output is produced in a stable path.
+- Engine: Godot 4.2.2-stable (Web export).

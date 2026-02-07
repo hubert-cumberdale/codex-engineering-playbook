@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import pathlib
 import sys
+from typing import Any, Dict
+
 import yaml
 
 
@@ -14,9 +16,10 @@ def fail(msg: str) -> None:
     raise SystemExit(2)
 
 
-def load_yaml(path: pathlib.Path) -> dict:
+def load_yaml(path: pathlib.Path) -> Dict[str, Any]:
     try:
-        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        return data if isinstance(data, dict) else {}
     except Exception as e:
         fail(f"Failed to parse YAML: {path} ({e})")
         return {}

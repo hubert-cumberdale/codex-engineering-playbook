@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from . import schemas
 
@@ -107,7 +107,7 @@ def _run_id_for(run_dir: Path, *, repo_root: Path) -> str:
     return _repo_relative(run_dir, repo_root)
 
 
-def build_index(roots: Iterable[Path], *, repo_root: Path) -> dict[str, object]:
+def build_index(roots: Iterable[Path], *, repo_root: Path) -> dict[str, Any]:
     root_paths = [root for root in roots]
     roots_scanned: list[str] = []
     for root in root_paths:
@@ -115,7 +115,7 @@ def build_index(roots: Iterable[Path], *, repo_root: Path) -> dict[str, object]:
         if root_rel not in roots_scanned:
             roots_scanned.append(root_rel)
 
-    runs: list[dict[str, object]] = []
+    runs: list[dict[str, Any]] = []
     seen_run_dirs: set[str] = set()
     for root in root_paths:
         for run_dir in _discover_run_dirs(root):
@@ -144,10 +144,10 @@ def build_index(roots: Iterable[Path], *, repo_root: Path) -> dict[str, object]:
     }
 
 
-def serialize_index(index: dict[str, object]) -> str:
+def serialize_index(index: dict[str, Any]) -> str:
     return json.dumps(index, indent=2, sort_keys=True) + "\n"
 
 
-def write_index(index: dict[str, object], out_path: Path) -> None:
+def write_index(index: dict[str, Any], out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(serialize_index(index), encoding="utf-8")

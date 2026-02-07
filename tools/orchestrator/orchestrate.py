@@ -15,8 +15,6 @@ Design goals:
 """
 
 from __future__ import annotations
-from pathlib import Path
-
 import argparse
 import dataclasses
 import json
@@ -27,7 +25,7 @@ import subprocess
 import sys
 import textwrap
 import time
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import yaml
 
@@ -42,11 +40,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # v2 plugin thin-slice
-from tools.evidence import index as evidence_index
-from tools.evidence import schemas as evidence_schemas
-from tools.orchestrator.plugins.runner import run_plugin
-from tools.orchestrator.plugins.interface import ExecutionContext
-from tools.orchestrator.workspaces import WorkspaceRegistryError, evidence_paths, resolve_workspace
+from tools.evidence import index as evidence_index  # noqa: E402
+from tools.evidence import schemas as evidence_schemas  # noqa: E402
+from tools.orchestrator.plugins.runner import run_plugin  # noqa: E402
+from tools.orchestrator.plugins.interface import ExecutionContext  # noqa: E402
+from tools.orchestrator.workspaces import WorkspaceRegistryError, evidence_paths, resolve_workspace  # noqa: E402
 
 @dataclasses.dataclass
 class TaskPack:
@@ -716,10 +714,14 @@ def main() -> None:
     if not manifest_path.exists():
         manifest_path.write_text('{"result":"started"}\n', encoding="utf-8")
 
-    manifest = {"result": "started", "run_id": run_id}
+    manifest: dict[str, Any] = {"result": "started", "run_id": run_id}
     if manifest_path.exists():
         try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            loaded = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                manifest = loaded
+            else:
+                manifest = {"result": "started", "warning": "manifest_unreadable", "run_id": run_id}
         except Exception:
             manifest = {"result": "started", "warning": "manifest_unreadable", "run_id": run_id}
     if "run_id" not in manifest:

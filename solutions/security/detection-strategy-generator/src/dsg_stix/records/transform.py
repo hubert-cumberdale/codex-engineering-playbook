@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Mapping, cast
 
 from ..models import ExtractionResult, Relationship, StixObject
 from .models import (
@@ -15,6 +15,8 @@ from .models import (
     SoftwareRecord,
     TechniqueRef,
 )
+
+
 
 ATTACK_PATTERN_PREFIX = "attack-pattern--"
 
@@ -81,29 +83,41 @@ def build_records(extraction: ExtractionResult) -> tuple[DetectionStrategyRecord
             domains=_extract_str_list(ds.raw, "x_mitre_domains"),
             platforms=_extract_str_list(ds.raw, "x_mitre_platforms"),
             data_sources=_extract_str_list(ds.raw, "x_mitre_data_sources"),
-            data_source_objects=_collect_related_records(
-                ds.id,
-                extraction.relationships,
-                data_sources_by_id,
-                RELATED_RELATIONSHIP_TYPES["data_source"],
+            data_source_objects=cast(
+                tuple[DataSourceRecord, ...],
+                _collect_related_records(
+                    ds.id,
+                    extraction.relationships,
+                    data_sources_by_id,
+                    RELATED_RELATIONSHIP_TYPES["data_source"],
+                ),
             ),
-            data_component_objects=_collect_related_records(
-                ds.id,
-                extraction.relationships,
-                data_components_by_id,
-                RELATED_RELATIONSHIP_TYPES["data_component"],
+            data_component_objects=cast(
+                tuple[DataComponentRecord, ...],
+                _collect_related_records(
+                    ds.id,
+                    extraction.relationships,
+                    data_components_by_id,
+                    RELATED_RELATIONSHIP_TYPES["data_component"],
+                ),
             ),
-            mitigations=_collect_related_records(
-                ds.id,
-                extraction.relationships,
-                mitigations_by_id,
-                RELATED_RELATIONSHIP_TYPES["mitigation"],
+            mitigations=cast(
+                tuple[MitigationRecord, ...],
+                _collect_related_records(
+                    ds.id,
+                    extraction.relationships,
+                    mitigations_by_id,
+                    RELATED_RELATIONSHIP_TYPES["mitigation"],
+                ),
             ),
-            software=_collect_related_records(
-                ds.id,
-                extraction.relationships,
-                software_by_id,
-                RELATED_RELATIONSHIP_TYPES["software"],
+            software=cast(
+                tuple[SoftwareRecord, ...],
+                _collect_related_records(
+                    ds.id,
+                    extraction.relationships,
+                    software_by_id,
+                    RELATED_RELATIONSHIP_TYPES["software"],
+                ),
             ),
             analytics=analytics,
             analytic_ref_objects=analytic_ref_objects,
@@ -135,29 +149,41 @@ def _build_analytic_record(
         external_id=_extract_external_id(analytic.raw),
         platforms=_extract_str_list(analytic.raw, "x_mitre_platforms"),
         data_sources=_extract_str_list(analytic.raw, "x_mitre_data_sources"),
-        data_source_objects=_collect_related_records(
-            analytic.id,
-            relationships,
-            data_sources_by_id,
-            RELATED_RELATIONSHIP_TYPES["data_source"],
+        data_source_objects=cast(
+            tuple[DataSourceRecord, ...],
+            _collect_related_records(
+                analytic.id,
+                relationships,
+                data_sources_by_id,
+                RELATED_RELATIONSHIP_TYPES["data_source"],
+            ),
         ),
-        data_component_objects=_collect_related_records(
-            analytic.id,
-            relationships,
-            data_components_by_id,
-            RELATED_RELATIONSHIP_TYPES["data_component"],
+        data_component_objects=cast(
+            tuple[DataComponentRecord, ...],
+            _collect_related_records(
+                analytic.id,
+                relationships,
+                data_components_by_id,
+                RELATED_RELATIONSHIP_TYPES["data_component"],
+            ),
         ),
-        mitigations=_collect_related_records(
-            analytic.id,
-            relationships,
-            mitigations_by_id,
-            RELATED_RELATIONSHIP_TYPES["mitigation"],
+        mitigations=cast(
+            tuple[MitigationRecord, ...],
+            _collect_related_records(
+                analytic.id,
+                relationships,
+                mitigations_by_id,
+                RELATED_RELATIONSHIP_TYPES["mitigation"],
+            ),
         ),
-        software=_collect_related_records(
-            analytic.id,
-            relationships,
-            software_by_id,
-            RELATED_RELATIONSHIP_TYPES["software"],
+        software=cast(
+            tuple[SoftwareRecord, ...],
+            _collect_related_records(
+                analytic.id,
+                relationships,
+                software_by_id,
+                RELATED_RELATIONSHIP_TYPES["software"],
+            ),
         ),
         log_source_references=_extract_log_source_references(analytic.raw),
         mutable_elements=_extract_mutable_elements(analytic.raw),
@@ -172,9 +198,9 @@ def _build_analytic_record(
 def _collect_related_records(
     stix_id: str,
     relationships: Iterable[Relationship],
-    record_by_id: dict[str, object],
+    record_by_id: Mapping[str, object],
     relationship_types: tuple[str, ...],
-) -> tuple:
+) -> tuple[object, ...]:
     related_ids = _collect_related_ids(
         stix_id,
         relationships,
@@ -342,11 +368,12 @@ def _resolve_analytic_refs(
     unresolved = sorted(set(unresolved))
     return tuple(resolved), tuple(unresolved)
 
-def _sort_key(record) -> tuple[str, str]:
+def _sort_key(record: object) -> tuple[str, str]:
     external_id = getattr(record, "external_id", None)
+    stix_id = getattr(record, "stix_id", "")
     return (
         external_id if isinstance(external_id, str) else "",
-        record.stix_id,
+        stix_id if isinstance(stix_id, str) else "",
     )
 
 def _build_data_source_record(source: StixObject) -> DataSourceRecord:
