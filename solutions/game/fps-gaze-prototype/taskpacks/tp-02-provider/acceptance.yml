@@ -1,0 +1,44 @@
+version: 1
+deps:
+  - ../../acceptance.yml
+
+stage:
+  id: stage-1
+  name: "Eye Tracking Provider Abstraction"
+
+pass:
+  - "Provider interface exists in C++ and is Blueprint-accessible."
+  - "Provider selection supports Tobii and Null with runtime enable/disable toggle plumbing."
+  - "Null provider returns explicit no-gaze and is default-safe when unavailable."
+  - "Normalized sample schema includes gaze_x, gaze_y, confidence, present, source, timestamp."
+  - "Confidence gating runs before downstream usage and is reflected in deterministic validation output."
+  - "Tobii SDK touchpoints are confined to Tobii provider implementation."
+
+fail:
+  - "Any Stage-2 intent resolution implementation appears in this Task Pack."
+  - "Any Stage-3 or Stage-4 gameplay adapter/slice implementation appears in this Task Pack."
+  - "Raw gaze time-series logging/recording/export appears in code or artifacts."
+  - "Gameplay module code references Tobii SDK symbols directly."
+
+evidence:
+  - "../../artifacts/stage-1/signal_contract.md"
+  - "../../artifacts/stage-1/runtime_validation.log"
+  - "../../artifacts/stage-1/provider_status.json"
+
+format:
+  commands:
+    - python -m compileall -q solutions/game/fps-gaze-prototype/taskpacks/tp-02-provider/tools
+
+lint:
+  commands:
+    - python tools/acceptance/check_git_diff_scope.py --allowed solutions/game/fps-gaze-prototype
+    - python tools/acceptance/check_no_qualitative_language.py --path solutions/game/fps-gaze-prototype/taskpacks/tp-02-provider
+    - python solutions/game/fps-gaze-prototype/taskpacks/tp-02-provider/tools/check_stage1_boundaries.py
+
+tests:
+  commands:
+    - python solutions/game/fps-gaze-prototype/taskpacks/tp-02-provider/tools/generate_stage1_artifacts.py
+    - python tools/acceptance/check_artifacts_present.py --path solutions/game/fps-gaze-prototype/artifacts/stage-1
+    - python tools/acceptance/check_artifact_contains_any.py --path solutions/game/fps-gaze-prototype/artifacts/stage-1 --any schema_version threshold monotonic deterministic
+    - python solutions/game/fps-gaze-prototype/taskpacks/tp-02-provider/tools/check_stage1_artifacts.py
+    - python tools/acceptance/check_engine_declared_in_taskpack.py --task-yml solutions/game/fps-gaze-prototype/taskpacks/tp-02-provider/task.yml --spec solutions/game/fps-gaze-prototype/taskpacks/tp-02-provider/design.md --artifact-path solutions/game/fps-gaze-prototype/artifacts/stage-1

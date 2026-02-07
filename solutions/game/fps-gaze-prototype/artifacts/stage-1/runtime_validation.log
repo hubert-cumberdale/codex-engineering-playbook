@@ -1,0 +1,9 @@
+STAGE1_VALIDATION deterministic
+enabled=true
+provider_requested=Tobii
+provider_available=false
+provider_active=Null
+threshold=0.60
+gating_pass=0
+gating_suppressed=3
+timestamp_semantics=monotonic

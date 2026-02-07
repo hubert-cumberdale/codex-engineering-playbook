@@ -1,0 +1,13 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "4.27",
+  "Category": "Game",
+  "Description": "FPS gaze prototype stage-1 provider abstraction",
+  "Modules": [
+    {
+      "Name": "FPSGazeCore",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

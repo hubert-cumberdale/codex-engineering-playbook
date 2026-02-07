@@ -1,0 +1,33 @@
+{
+  "schema_version": "stage-1.v1",
+  "enabled": true,
+  "provider": "Tobii",
+  "threshold": 0.6,
+  "provider_available": false,
+  "samples": [
+    {
+      "name": "below_threshold",
+      "gaze_x": 0.4,
+      "gaze_y": 0.2,
+      "confidence": 0.3,
+      "present": true,
+      "timestamp": 1000.0
+    },
+    {
+      "name": "at_threshold",
+      "gaze_x": 0.5,
+      "gaze_y": 0.5,
+      "confidence": 0.6,
+      "present": true,
+      "timestamp": 1001.0
+    },
+    {
+      "name": "high_confidence",
+      "gaze_x": 0.8,
+      "gaze_y": 0.1,
+      "confidence": 0.9,
+      "present": true,
+      "timestamp": 1002.0
+    }
+  ]
+}
